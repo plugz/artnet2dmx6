@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 # Enable CMake support for ASM and C languages
-enable_language(C ASM)
+enable_language(C CXX ASM)
 # STM32CubeMX generated symbols (macros)
 set(MX_Defines_Syms 
 	USE_HAL_DRIVER 
@@ -56,6 +56,7 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/sysmem.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/syscalls.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../startup_stm32f407xx.s
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Artnet2Dmx6.cpp
 )
 
 # STM32 HAL/LL Drivers
