@@ -57,6 +57,9 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/syscalls.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../startup_stm32f407xx.s
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Artnet2Dmx6.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/ExternalBounce.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/InputOutputMCPSPI.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/MCP23S17.cpp
 )
 
 # STM32 HAL/LL Drivers

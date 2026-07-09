@@ -5,7 +5,11 @@
 
 class Artnet2Dmx6 {
 public:
-    static void init();
+    void init_beforehal();
+    void init_afterhal();
+    void init_sysinit();
+    void init_beforeloop();
+    void tick();
 
     int i;
 };
