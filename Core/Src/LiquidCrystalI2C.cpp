@@ -2,6 +2,9 @@
 
 #include "i2c.h"
 
+#include <algorithm>
+#include <cstring>
+
 // When the display powers up, it is configured as follows:
 //
 // 1. Display clear
@@ -29,10 +32,11 @@ void LiquidCrystalI2C::init(I2C_HandleTypeDef* i2cHandle, uint8_t lcd_addr, uint
     _rows = lcd_rows;
     _charsize = charsize;
     _backlightval = LCD_BACKLIGHT;
+    _currentCol = 0;
+    _currentRow = 0;
 }
 
 void LiquidCrystalI2C::begin() {
-    // XXX Wire.begin();
     _displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
 
     if (_rows > 1) {
@@ -115,6 +119,8 @@ void LiquidCrystalI2C::setCursor(uint8_t col, uint8_t row){
         row = _rows-1;    // we count rows starting w/0
     }
     command(LCD_SETDDRAMADDR | (col + row_offsets[row]));
+    _currentCol = col;
+    _currentRow = row;
 }
 
 // Turn the display on/off (quickly)
@@ -203,6 +209,20 @@ bool LiquidCrystalI2C::getBacklight() {
   return _backlightval == LCD_BACKLIGHT;
 }
 
+void LiquidCrystalI2C::printLine(uint8_t line, char const* str, bool wrap) {
+    unsigned int charCount = wrap ? strlen(str) : std::min(strlen(str), (size_t)_cols);
+    setCursor(0, line);
+    for (unsigned int i = 0; i < charCount; ++i) {
+        write(str[i]);
+    }
+}
+
+void LiquidCrystalI2C::print(char const* str, bool wrap) {
+    unsigned int charCount = wrap ? strlen(str) : std::min(strlen(str), (size_t)(_cols - _currentCol));
+    for (unsigned int i = 0; i < charCount; ++i) {
+        write(str[i]);
+    }
+}
 
 /*********** mid level commands, for sending data/cmds */
 
@@ -210,9 +230,12 @@ inline void LiquidCrystalI2C::command(uint8_t value) {
     send(value, 0);
 }
 
-inline size_t LiquidCrystalI2C::write(uint8_t value) {
+inline void LiquidCrystalI2C::write(uint8_t value) {
     send(value, Rs);
-    return 1;
+    ++_currentCol;
+    if (_currentCol >= _cols) {
+        setCursor(0, (_currentRow + 1) % _rows); // go to next line
+    }
 }
 
 
@@ -234,9 +257,6 @@ void LiquidCrystalI2C::write4bits(uint8_t value) {
 void LiquidCrystalI2C::expanderWrite(uint8_t _data){
     _data |= _backlightval;
     HAL_I2C_Master_Transmit(_i2cHandle, _addr, &_data, 1, 1000);
-    // Wire.beginTransmission(_addr);
-    // Wire.write((int)(_data) | _backlightval);
-    // Wire.endTransmission();
 }
 
 void LiquidCrystalI2C::pulseEnable(uint8_t _data){

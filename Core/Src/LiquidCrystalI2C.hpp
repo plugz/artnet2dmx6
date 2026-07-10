@@ -137,8 +137,12 @@ public:
     void noAutoscroll();
     void createChar(uint8_t, uint8_t[]);
     void setCursor(uint8_t, uint8_t);
-    size_t write(uint8_t);
+    void write(uint8_t);
     void command(uint8_t);
+
+    // \0 terminated string
+    void printLine(uint8_t line, char const* str, bool wrap = false);
+    void print(char const* str, bool wrap = false);
 
     inline void blink_on() { blink(); }
     inline void blink_off() { noBlink(); }
@@ -164,6 +168,8 @@ private:
     uint8_t _rows;
     uint8_t _charsize;
     uint8_t _backlightval;
+    uint8_t _currentCol;
+    uint8_t _currentRow;
 };
 
 #endif

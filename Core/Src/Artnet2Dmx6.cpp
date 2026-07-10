@@ -86,8 +86,8 @@ static void buttons_tick() {
         if (button.update(!mcp.getCurrentValue(i), currentTime)) { // '!' because 0 low means pressed
             // TODO connect to menu
             // handleButton(i, button.read());
-            //screen.setCursor(0, i);
-            //screen.write(button.read() ? '1' : '0');
+            screen.setCursor(1, i);
+            screen.write(button.read() ? '1' : '0');
         }
         ++i;
     }
@@ -99,13 +99,7 @@ static void screen_setup() {
     screen.init(&hi2c1, 0b01000000, 20, 4);
     screen.begin();
     screen.setCursor(0, 0);
-    screen.write('a');
-    screen.setCursor(0, 1);
-    screen.write('b');
-    screen.setCursor(0, 2);
-    screen.write('c');
-    screen.setCursor(0, 3);
-    screen.write('d');
+    screen.print("waaaaa truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuf", true);
 }
 
 static void screen_reset() {
@@ -159,7 +153,7 @@ void Artnet2Dmx6::tick() {
 //        screen.printline((1 + i) % 4, "this");
 //        screen.printline((2 + i) % 4, "shit");
 //        screen.printline((3 + i) % 4, "!");
-        screen.setBacklight(i % 2);
+//        screen.setBacklight(i % 2);
         ++i;
         prevTime = currentTime;
     }
