@@ -10,7 +10,7 @@
 class InputOutputMCPSPI : public MCP23S17
 {
 public:
-    void setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTypeDef spiHandle, uint8_t haenAddr);
+    void setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTypeDef* spiHandle, uint8_t haenAddr);
     void tick();
 
     void read();

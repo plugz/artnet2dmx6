@@ -87,6 +87,7 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
+
   /* USER CODE BEGIN SysInit */
   artnet2dmx6_init_sysinit();
   /* USER CODE END SysInit */

@@ -118,7 +118,7 @@ public:
     MCP23S17();//For include inside other libraries
 
     // haenAddr is 0-7
-    void             setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTypeDef spiHandle, uint8_t haenAddr);//used with other libraries only
+    void             setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTypeDef* spiHandle, uint8_t haenAddr);//used with other libraries only
 
     void             begin();
 
@@ -162,8 +162,8 @@ protected:
         uint8_t rxBuff[1] = {0,};
         txBuff[0] = _readCmd;
         txBuff[1] = addr;
-        HAL_SPI_Transmit(&_spiHandle, txBuff, sizeof(txBuff), HAL_MAX_DELAY);
-        HAL_SPI_Receive(&_spiHandle, rxBuff, sizeof(rxBuff), HAL_MAX_DELAY);
+        HAL_SPI_Transmit(_spiHandle, txBuff, sizeof(txBuff), HAL_MAX_DELAY);
+        HAL_SPI_Receive(_spiHandle, rxBuff, sizeof(rxBuff), HAL_MAX_DELAY);
         _GPIOendSend();
 
         return rxBuff[0];
@@ -175,8 +175,8 @@ protected:
         uint8_t rxBuff[2] = {0,};
         txBuff[0] = _readCmd;
         txBuff[1] = addr;
-        HAL_SPI_Transmit(&_spiHandle, txBuff, sizeof(txBuff), HAL_MAX_DELAY);
-        HAL_SPI_Receive(&_spiHandle, rxBuff, sizeof(rxBuff), HAL_MAX_DELAY);
+        HAL_SPI_Transmit(_spiHandle, txBuff, sizeof(txBuff), HAL_MAX_DELAY);
+        HAL_SPI_Receive(_spiHandle, rxBuff, sizeof(rxBuff), HAL_MAX_DELAY);
         _GPIOendSend();
 
         return ((uint16_t)rxBuff[0] << 8) | (uint16_t)rxBuff[1];
@@ -188,7 +188,7 @@ protected:
         buff[0] = _writeCmd;
         buff[1] = addr;
         buff[2] = data;
-        HAL_SPI_Transmit(&_spiHandle, buff, sizeof(buff), HAL_MAX_DELAY);
+        HAL_SPI_Transmit(_spiHandle, buff, sizeof(buff), HAL_MAX_DELAY);
         _GPIOendSend();
     }
 
@@ -200,7 +200,7 @@ protected:
         buff[1] = addr;
         for (unsigned int i = 0; i < SIZE; ++i)
             buff[2 + i] = data[i];
-        HAL_SPI_Transmit(&_spiHandle, buff, sizeof(buff), HAL_MAX_DELAY);
+        HAL_SPI_Transmit(_spiHandle, buff, sizeof(buff), HAL_MAX_DELAY);
         _GPIOendSend();
     }
 
@@ -211,16 +211,16 @@ protected:
         buff[1] = addr;
         buff[2] = (uint8_t)(data >> 8);
         buff[3] = (uint8_t)data;
-        HAL_SPI_Transmit(&_spiHandle, buff, sizeof(buff), HAL_MAX_DELAY);
+        HAL_SPI_Transmit(_spiHandle, buff, sizeof(buff), HAL_MAX_DELAY);
         _GPIOendSend();
     }
 
 
 private:
-    GPIO_TypeDef*     _csPinPeripheral;
-    uint16_t          _csPin;
-    SPI_HandleTypeDef _spiHandle;
-    uint8_t           _addr;
+    GPIO_TypeDef*      _csPinPeripheral;
+    uint16_t           _csPin;
+    SPI_HandleTypeDef* _spiHandle;
+    uint8_t            _addr;
 
 
     uint8_t         _readCmd;

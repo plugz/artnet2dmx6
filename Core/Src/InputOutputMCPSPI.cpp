@@ -2,7 +2,7 @@
 
 #include "spi.h"
 
-void InputOutputMCPSPI::setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTypeDef spiHandle, uint8_t haenAddr) {
+void InputOutputMCPSPI::setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTypeDef* spiHandle, uint8_t haenAddr) {
     MCP23S17::setup(csPinPeripheral, csPin, spiHandle, haenAddr);
     MCP23S17::begin();
     setPullupPortA(true); // enable pullup on port A

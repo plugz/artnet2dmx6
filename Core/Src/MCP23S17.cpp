@@ -7,7 +7,7 @@ static uint8_t s_haenEnabledCSPins[256] = {0,};
 MCP23S17::MCP23S17(){
 }
 
-void MCP23S17::setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTypeDef spiHandle, uint8_t haenAddr){
+void MCP23S17::setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTypeDef* spiHandle, uint8_t haenAddr){
     _csPinPeripheral = csPinPeripheral;
     _csPin = csPin;
     _spiHandle = spiHandle;
