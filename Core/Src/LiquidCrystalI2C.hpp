@@ -138,6 +138,7 @@ public:
     void createChar(uint8_t, uint8_t[]);
     void setCursor(uint8_t, uint8_t);
     void write(uint8_t);
+    void advanceCursor(uint8_t count = 1);
     void command(uint8_t);
 
     // \0 terminated string
@@ -170,6 +171,7 @@ private:
     uint8_t _backlightval;
     uint8_t _currentCol;
     uint8_t _currentRow;
+    uint8_t _currentDisplay[20*4];
 };
 
 #endif

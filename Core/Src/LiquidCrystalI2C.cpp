@@ -34,6 +34,8 @@ void LiquidCrystalI2C::init(I2C_HandleTypeDef* i2cHandle, uint8_t lcd_addr, uint
     _backlightval = LCD_BACKLIGHT;
     _currentCol = 0;
     _currentRow = 0;
+    for (auto& current : _currentDisplay)
+        current = ' ';
 }
 
 void LiquidCrystalI2C::begin() {
@@ -231,10 +233,18 @@ inline void LiquidCrystalI2C::command(uint8_t value) {
 }
 
 inline void LiquidCrystalI2C::write(uint8_t value) {
-    send(value, Rs);
-    ++_currentCol;
+    auto idx = _currentRow * _cols + _currentCol;
+    if (_currentDisplay[idx] != value) {
+        send(value, Rs);
+        _currentDisplay[idx] = value;
+    }
+    advanceCursor();
+}
+
+void LiquidCrystalI2C::advanceCursor(uint8_t count) {
+    _currentCol += count;
     if (_currentCol >= _cols) {
-        setCursor(0, (_currentRow + 1) % _rows); // go to next line
+        setCursor(_currentCol % _cols, (_currentRow + _currentCol / _cols) % _rows); // go to next line
     }
 }
 
