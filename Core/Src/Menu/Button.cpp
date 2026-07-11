@@ -39,7 +39,7 @@ void Button::_sendRepeat(uint32_t period) {
     auto now = HAL_GetTick();
     if (now >= _prevSendRepeatTime + period) {
         (Menu::current()->*_cb)(Event::REPEAT);
-        _prevSendRepeatTime += period;
+        _prevSendRepeatTime += period * ((now - _prevSendRepeatTime) / period);
     }
 }
 
