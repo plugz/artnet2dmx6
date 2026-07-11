@@ -94,10 +94,11 @@ template<> void GenericMenu<bool>::_displayValue() {
 }
 
 // explicit instantiation
-template class GenericMenu<bool>;
-template class GenericMenu<int>;
-template class GenericMenu<unsigned int>;
-template class GenericMenu<int64_t>;
-template class GenericMenu<uint64_t>;
+//template class GenericMenu<bool>;
+//template class GenericMenu<int>;
+//template class GenericMenu<unsigned int>;
+//template class GenericMenu<int64_t>;
+//template class GenericMenu<uint64_t>;
+template class GenericMenu<uint32_t>;
 
 } // namespace Menu

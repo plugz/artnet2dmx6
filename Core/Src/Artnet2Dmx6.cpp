@@ -3,6 +3,7 @@
 #include "ExternalBounce.hpp"
 #include "InputOutputMCPSPI.hpp"
 #include "LiquidCrystalI2C.hpp"
+#include "Menu/MainMenu.hpp"
 
 #include "i2c.h"
 #include "spi.h"
@@ -14,6 +15,8 @@ static uint32_t currentTime;
 static ExternalBounce buttons[7];
 static InputOutputMCPSPI mcp;
 static LiquidCrystalI2C screen;
+static Menu::MainMenu mainMenu{{&screen, nullptr}};
+static Menu::Button menuButtons[4] = {{&Menu::Menu::up}, {&Menu::Menu::down}, {&Menu::Menu::left}, {&Menu::Menu::right}};
 
 // C part
 
@@ -84,10 +87,8 @@ static void buttons_tick() {
     unsigned int i = 0;
     for (auto& button: buttons) {
         if (button.update(!mcp.getCurrentValue(i), currentTime)) { // '!' because 0 low means pressed
-            // TODO connect to menu
-            // handleButton(i, button.read());
-            screen.setCursor(1, i);
-            screen.write(button.read() ? '1' : '0');
+            if (i < 4)
+                menuButtons[i].updateStatus(button.read());
         }
         ++i;
     }
@@ -98,12 +99,12 @@ static void screen_setup() {
     // i2c: 8bit address, not 7bit
     screen.init(&hi2c1, 0b01000000, 20, 4);
     screen.begin();
-    screen.setCursor(0, 0);
-    screen.print("waaaaa truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuf", true);
-    screen.setCursor(0, 0);
-    screen.print("waaaao truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu!uuuuuuuuuuuf!", true);
-    screen.setCursor(0, 0);
-    screen.print("iiiiii truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu!uuuuuuddddddd", true);
+//    screen.setCursor(0, 0);
+//    screen.print("waaaaa truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuf", true);
+//    screen.setCursor(0, 0);
+//    screen.print("waaaao truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu!uuuuuuuuuuuf!", true);
+//    screen.setCursor(0, 0);
+//    screen.print("iiiiii truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu!uuuuuuddddddd", true);
 }
 
 static void screen_reset() {
@@ -115,6 +116,18 @@ static void screen_tick() {
 //    screen.tick(&sentI2cOrSpi, &screenDone, currentTime);
 //    if (screenDone)
 //        serialOut.sendScreenDone();
+}
+
+//menu
+static void menu_setup() {
+    mainMenu.init(nullptr);
+    mainMenu.enable();
+}
+
+static void menu_reset() {
+}
+
+static void menu_tick() {
 }
 
 void Artnet2Dmx6::init_beforehal() {
@@ -137,8 +150,9 @@ void Artnet2Dmx6::init_beforeloop() {
     HAL_Delay(250);
 
     mcp_setup();
-    buttons_setup();
     screen_setup();
+    menu_setup();
+    buttons_setup();
 
  //   initialise_monitor_handles();
 }
@@ -146,19 +160,20 @@ void Artnet2Dmx6::init_beforeloop() {
 void Artnet2Dmx6::tick() {
     currentTime = HAL_GetTick();
     mcp_tick();
-    buttons_tick();
     screen_tick();
+    menu_tick();
+    buttons_tick();
 
-    static uint32_t prevTime = 0;
-    static int i = 0;
-    if (currentTime > prevTime + 2000) {
-//        printf("fuuuuuck\n");
-//        screen.printline((0 + i) % 4, "fuck");
-//        screen.printline((1 + i) % 4, "this");
-//        screen.printline((2 + i) % 4, "shit");
-//        screen.printline((3 + i) % 4, "!");
-//        screen.setBacklight(i % 2);
-        ++i;
-        prevTime = currentTime;
-    }
+//    static uint32_t prevTime = 0;
+//    static int i = 0;
+//    if (currentTime > prevTime + 2000) {
+////        printf("fuuuuuck\n");
+////        screen.printline((0 + i) % 4, "fuck");
+////        screen.printline((1 + i) % 4, "this");
+////        screen.printline((2 + i) % 4, "shit");
+////        screen.printline((3 + i) % 4, "!");
+////        screen.setBacklight(i % 2);
+//        ++i;
+//        prevTime = currentTime;
+//    }
 }

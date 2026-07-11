@@ -66,6 +66,7 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/MCP23S17.cpp
 
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/Button.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/ContainerMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/GenericMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/IpMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/MainMenu.cpp
