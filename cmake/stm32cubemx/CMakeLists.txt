@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 4.00)
 # Enable CMake support for ASM and C languages
 enable_language(C CXX ASM)
 # STM32CubeMX generated symbols (macros)
@@ -35,6 +35,8 @@ set(MX_Include_Dirs
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Middlewares/Third_Party/LwIP/src/include/compat/stdc
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Middlewares/Third_Party/LwIP/system/arch
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Drivers/CMSIS/Include
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src
 )
 
 # STM32CubeMX generated application sources
@@ -56,11 +58,14 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/sysmem.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/syscalls.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../startup_stm32f407xx.s
+
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Artnet2Dmx6.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/ExternalBounce.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/InputOutputMCPSPI.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/LiquidCrystalI2C.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/MCP23S17.cpp
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/Menu.cpp
 )
 
 # STM32 HAL/LL Drivers
