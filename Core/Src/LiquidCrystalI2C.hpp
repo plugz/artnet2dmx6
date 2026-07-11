@@ -62,6 +62,11 @@
  */
 class LiquidCrystalI2C {
 public:
+    enum {
+        MAX_COLS = 20,
+        MAX_ROWS = 4,
+    };
+public:
     /**
      * Constructor
      *
@@ -142,18 +147,13 @@ public:
     void command(uint8_t);
 
     // \0 terminated string
-    void printLine(uint8_t line, char const* str, bool wrap = false);
+    void printLine(uint8_t line, char const* str);
     void print(char const* str, bool wrap = false);
 
     inline void blink_on() { blink(); }
     inline void blink_off() { noBlink(); }
     inline void cursor_on() { cursor(); }
     inline void cursor_off() { noCursor(); }
-
-// Compatibility API function aliases
-    void setBacklight(uint8_t new_val);                // alias for backlight() and nobacklight()
-    void load_custom_character(uint8_t char_num, uint8_t *rows);    // alias for createChar()
-//    void printstr(const char[]);
 
 private:
     void send(uint8_t, uint8_t);
@@ -172,6 +172,8 @@ private:
     uint8_t _currentCol;
     uint8_t _currentRow;
     uint8_t _currentDisplay[20*4];
+
+//    uint8_t _currentStep;
 };
 
 #endif

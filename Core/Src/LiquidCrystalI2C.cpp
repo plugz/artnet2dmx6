@@ -211,11 +211,15 @@ bool LiquidCrystalI2C::getBacklight() {
   return _backlightval == LCD_BACKLIGHT;
 }
 
-void LiquidCrystalI2C::printLine(uint8_t line, char const* str, bool wrap) {
-    unsigned int charCount = wrap ? strlen(str) : std::min(strlen(str), (size_t)_cols);
+void LiquidCrystalI2C::printLine(uint8_t line, char const* str) {
+    unsigned int len = std::min(strlen(str), (size_t)_cols);
     setCursor(0, line);
-    for (unsigned int i = 0; i < charCount; ++i) {
+    unsigned int i = 0;
+    for (; i < len; ++i) {
         write(str[i]);
+    }
+    for (; i < _cols; ++i) {
+        write(' ');
     }
 }
 
@@ -278,21 +282,3 @@ void LiquidCrystalI2C::pulseEnable(uint8_t _data){
     //delayMicroseconds(50);        // commands need > 37us to settle
     HAL_Delay(2);
 }
-
-void LiquidCrystalI2C::load_custom_character(uint8_t char_num, uint8_t *rows){
-    createChar(char_num, rows);
-}
-
-void LiquidCrystalI2C::setBacklight(uint8_t new_val){
-    if (new_val) {
-        backlight();        // turn backlight on
-    } else {
-        noBacklight();        // turn backlight off
-    }
-}
-
-//void LiquidCrystalI2C::printstr(const char c[]){
-//    //This function is not identical to the function used for "real" I2C displays
-//    //it's here so the user sketch doesn't have to be changed
-//    print(c);
-//}

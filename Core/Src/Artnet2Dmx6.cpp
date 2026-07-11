@@ -99,9 +99,11 @@ static void screen_setup() {
     screen.init(&hi2c1, 0b01000000, 20, 4);
     screen.begin();
     screen.setCursor(0, 0);
-    screen.printLine(0, "waaaaa truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuf", true);
-    screen.printLine(0, "waaaao truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu!uuuuuuuuuuuf!", true);
-    screen.printLine(0, "iiiiii truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu!uuuuuuddddddd", true);
+    screen.print("waaaaa truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuf", true);
+    screen.setCursor(0, 0);
+    screen.print("waaaao truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu!uuuuuuuuuuuf!", true);
+    screen.setCursor(0, 0);
+    screen.print("iiiiii truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu!uuuuuuddddddd", true);
 }
 
 static void screen_reset() {
