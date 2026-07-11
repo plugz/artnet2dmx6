@@ -3,7 +3,7 @@ mingw32-make VERBOSE=1
 
 openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c "program artnet2dmx6.elf verify reset"
 
-gdb-multiarch
+arm-none-eabi-gdb
 file artnet2dmx6.elf
 target extended-remote localhost:3333
 set remote hardware-breakpoint-limit 6
