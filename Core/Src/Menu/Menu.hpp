@@ -21,7 +21,7 @@ public:
     Menu(CommonStuff const& commonStuff) : _common(commonStuff), _parent(nullptr) {}
     virtual ~Menu();
 
-    void init(Menu* parent = nullptr) {
+    void init(Menu* parent) {
         _parent = parent;
     }
 
@@ -56,16 +56,16 @@ class ContainerMenu : public Menu {
 public:
     ContainerMenu(CommonStuff const& commonStuff)
         : Menu(commonStuff)
-        , _subMenusTuple(TSubmenus(commonStuff, this)...)
+        , _subMenusTuple(TSubmenus(commonStuff)...)
     {
     }
 
-    void init(Menu* parent = nullptr) override {
+    void init(Menu* parent) {
         Menu::init(parent);
         // fill array for dynamic subMenu access
         int idx = 0;
         std::apply([&](auto&... subMenu){
-                (((_subMenusTuple[idx++] = &subMenu), (subMenu.init(this))), ...);
+                (((_subMenus[idx++] = &subMenu), (subMenu.init(this))), ...);
             }, _subMenusTuple);
     }
 

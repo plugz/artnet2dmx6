@@ -11,16 +11,21 @@ enum {
 };
 
 
-template <typename T>
+template<typename T>
 GenericMenu<T>::GenericMenu(CommonStuff const& common, Conf const& c)
     : Menu(common)
     , _config(c) {}
 
-template <typename T> GenericMenu<T>::~GenericMenu() {}
+template<typename T> GenericMenu<T>::~GenericMenu() {}
 
-template <typename T> char const* GenericMenu<T>::name() { return _config.name; }
+template<typename T>
+void GenericMenu<T>::setConfig(Conf const& c) {
+    _config = c;
+}
 
-template <typename T> void GenericMenu<T>::up(Button::Event e) {
+template<typename T> char const* GenericMenu<T>::name() { return _config.name; }
+
+template<typename T> void GenericMenu<T>::up(Button::Event e) {
     if (e != Button::Event::PRESS && e != Button::Event::REPEAT)
         return;
     if constexpr (std::is_same_v<T, bool>) {
@@ -33,7 +38,7 @@ template <typename T> void GenericMenu<T>::up(Button::Event e) {
     _displayValue();
 }
 
-template <typename T> void GenericMenu<T>::down(Button::Event e) {
+template<typename T> void GenericMenu<T>::down(Button::Event e) {
     if (e != Button::Event::PRESS && e != Button::Event::REPEAT)
         return;
     if constexpr (std::is_same_v<T, bool>) {
@@ -46,33 +51,33 @@ template <typename T> void GenericMenu<T>::down(Button::Event e) {
     _displayValue();
 }
 
-template <typename T> void GenericMenu<T>::right(Button::Event e) {
+template<typename T> void GenericMenu<T>::right(Button::Event e) {
     if (e != Button::Event::PRESS)
         return;
     applyConfig();
 }
 
-template <typename T> void GenericMenu<T>::_applyConfig() {
+template<typename T> void GenericMenu<T>::_applyConfig() {
     if (_config.setValueCallback)
         _config.setValueCallback(_value);
 }
 
-template <typename T> void GenericMenu<T>::_enable() {
+template<typename T> void GenericMenu<T>::_enable() {
     if (_config.getValueCallback)
         _value = _config.getValueCallback();
     _display();
 }
 
-template <typename T> void GenericMenu<T>::_disable() {}
+template<typename T> void GenericMenu<T>::_disable() {}
 
-template <typename T> void GenericMenu<T>::_display() {
+template<typename T> void GenericMenu<T>::_display() {
     _common.screen->printLine(0, _config.inName);
     _common.screen->printLine(1, "");
     _common.screen->printLine(3, _config.desc);
     _displayValue();
 }
 
-template <typename T> void GenericMenu<T>::_displayValue() {
+template<typename T> void GenericMenu<T>::_displayValue() {
     char buff[LINE_BUFF_SIZE] = "  ";
     auto res = std::to_chars(buff + 2, buff + (LINE_BUFF_SIZE - 3), _value);
     if (res.ec != std::errc()) // to_chars error
@@ -82,7 +87,7 @@ template <typename T> void GenericMenu<T>::_displayValue() {
 }
 
 // to_chars does not do bool, need specific instantiation
-template <> void GenericMenu<bool>::_displayValue() {
+template<> void GenericMenu<bool>::_displayValue() {
     char buff[LINE_BUFF_SIZE];
     snprintf(buff, sizeof(buff), "  %s", (_value ? "YES" : "NO"));
     _common.screen->printLine(2, buff);

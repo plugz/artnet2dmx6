@@ -12,9 +12,9 @@ public:
     struct Conf {
         T min;
         T max;
-        char const* name = "INT";
-        char const* inName = "EDIT INT";
-        char const* desc = "";
+        char name[16] = "INT";
+        char inName[16] = "EDIT INT";
+        char desc[16] = "";
         std::function<T(void)> getValueCallback = nullptr;
         std::function<void(T const&)> setValueCallback = nullptr;
     };
@@ -22,6 +22,8 @@ public:
 public:
     GenericMenu(CommonStuff const& common, Conf const& c);
     virtual ~GenericMenu();
+
+    void setConfig(Conf const& c);
 
     virtual char const* name() override;
 
