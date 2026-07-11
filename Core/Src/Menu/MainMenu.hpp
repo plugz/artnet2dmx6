@@ -1,0 +1,24 @@
+#ifndef __MENU_MAINMENU_HPP__
+#define __MENU_MAINMENU_HPP__
+
+#include "Menu.hpp"
+
+#include "IpMenu.hpp"
+#include "UniversesMenu.hpp"
+
+namespace Menu {
+
+using MainMenuContainer = ContainerMenu<IpMenu, UniversesMenu>;
+
+class MainMenu : public MainMenuContainer
+{
+public:
+    MainMenu(CommonStuff const& common);
+    virtual ~MainMenu();
+
+    virtual char const* name() override;
+};
+
+} // namespace Menu
+
+#endif

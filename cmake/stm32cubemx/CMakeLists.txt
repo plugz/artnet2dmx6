@@ -68,6 +68,7 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/Button.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/GenericMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/IpMenu.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/MainMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/Menu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/UniverseMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/UniversesMenu.cpp

@@ -19,4 +19,8 @@ void UniversesMenu::init(Menu* parent) {
         }, _subMenusTuple);
 }
 
+char const* UniversesMenu::name() {
+    return "Artnet Universes";
+}
+
 };

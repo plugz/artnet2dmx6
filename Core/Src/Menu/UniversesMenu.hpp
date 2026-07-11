@@ -8,10 +8,13 @@ namespace Menu {
 class UniversesMenu
     : public ContainerMenu<UniverseMenu, UniverseMenu, UniverseMenu, UniverseMenu, UniverseMenu, UniverseMenu>
 {
+public:
     UniversesMenu(CommonStuff const& common);
     virtual ~UniversesMenu();
 
     void init(Menu* parent);
+
+    virtual char const* name() override;
 };
 
 } // namespace Menu
