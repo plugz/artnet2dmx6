@@ -83,29 +83,6 @@ public:
      */
     void begin();
 
-     /**
-      * Remove all the characters currently shown. Next print/write operation will start
-      * from the first position on LCD display.
-      */
-    void clear();
-
-    /**
-     * Next print/write operation will will start from the first position on the LCD display.
-     */
-    void home();
-
-     /**
-      * Do not show any characters on the LCD display. Backlight state will remain unchanged.
-      * Also all characters written on the display will return, when the display in enabled again.
-      */
-    void noDisplay();
-
-    /**
-     * Show the characters on the LCD display, this is the normal behaviour. This method should
-     * only be used after noDisplay() has been used.
-     */
-    void display();
-
     /**
      * Do not blink the cursor indicator.
      */
@@ -127,20 +104,9 @@ public:
      */
     void cursor();
 
-    void scrollDisplayLeft();
-    void scrollDisplayRight();
-    void printLeft();
-    void printRight();
-    void leftToRight();
-    void rightToLeft();
-    void shiftIncrement();
-    void shiftDecrement();
     void noBacklight();
     void backlight();
     bool getBacklight();
-    void autoscroll();
-    void noAutoscroll();
-    void createChar(uint8_t, uint8_t[]);
     void setCursor(uint8_t col, uint8_t row, bool doIt = true);
     void write(uint8_t);
     void advanceCursor(bool doHard);
@@ -164,9 +130,8 @@ private:
     uint8_t _addr;
 
     uint8_t _displaycontrol;
-    uint8_t _displaymode;
-
     uint8_t _backlightval;
+
     uint8_t _currentHardCol; // actual col in screen
     uint8_t _currentHardRow; // actual row in screen
     uint8_t _currentCol;

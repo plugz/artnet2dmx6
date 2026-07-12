@@ -76,28 +76,16 @@ void LiquidCrystalI2C::begin() {
 
     // turn the display on with no cursor or blinking default
     _displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
-    display();
+    command(LCD_DISPLAYCONTROL | _displaycontrol);
 
     // clear it off
-    clear();
-
-    // Initialize to default text direction (for roman languages)
-    _displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
-
-    // set the entry mode
-    command(LCD_ENTRYMODESET | _displaymode);
-
-    home();
-}
-
-/********** high level commands, for the user! */
-void LiquidCrystalI2C::clear(){
     command(LCD_CLEARDISPLAY);// clear display, set cursor position to zero
     //delayMicroseconds(2000);  // this command takes a long time!
     HAL_Delay(3);
-}
 
-void LiquidCrystalI2C::home(){
+    // set the entry mode
+    command(LCD_ENTRYMODESET | LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT);
+
     command(LCD_RETURNHOME);  // set cursor position to zero
     //delayMicroseconds(2000);  // this command takes a long time!
     HAL_Delay(3);
@@ -115,16 +103,6 @@ void LiquidCrystalI2C::setCursor(uint8_t col, uint8_t row, bool doIt){
     }
     _currentCol = col;
     _currentRow = row;
-}
-
-// Turn the display on/off (quickly)
-void LiquidCrystalI2C::noDisplay() {
-    _displaycontrol &= ~LCD_DISPLAYON;
-    command(LCD_DISPLAYCONTROL | _displaycontrol);
-}
-void LiquidCrystalI2C::display() {
-    _displaycontrol |= LCD_DISPLAYON;
-    command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
 // Turns the underline cursor on/off
@@ -145,48 +123,6 @@ void LiquidCrystalI2C::noBlink() {
 void LiquidCrystalI2C::blink() {
     _displaycontrol |= LCD_BLINKON;
     command(LCD_DISPLAYCONTROL | _displaycontrol);
-}
-
-// These commands scroll the display without changing the RAM
-void LiquidCrystalI2C::scrollDisplayLeft(void) {
-    command(LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVELEFT);
-}
-void LiquidCrystalI2C::scrollDisplayRight(void) {
-    command(LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVERIGHT);
-}
-
-// This is for text that flows Left to Right
-void LiquidCrystalI2C::leftToRight(void) {
-    _displaymode |= LCD_ENTRYLEFT;
-    command(LCD_ENTRYMODESET | _displaymode);
-}
-
-// This is for text that flows Right to Left
-void LiquidCrystalI2C::rightToLeft(void) {
-    _displaymode &= ~LCD_ENTRYLEFT;
-    command(LCD_ENTRYMODESET | _displaymode);
-}
-
-// This will 'right justify' text from the cursor
-void LiquidCrystalI2C::autoscroll(void) {
-    _displaymode |= LCD_ENTRYSHIFTINCREMENT;
-    command(LCD_ENTRYMODESET | _displaymode);
-}
-
-// This will 'left justify' text from the cursor
-void LiquidCrystalI2C::noAutoscroll(void) {
-    _displaymode &= ~LCD_ENTRYSHIFTINCREMENT;
-    command(LCD_ENTRYMODESET | _displaymode);
-}
-
-// Allows us to fill the first 8 CGRAM locations
-// with custom characters
-void LiquidCrystalI2C::createChar(uint8_t location, uint8_t charmap[]) {
-    location &= 0x7; // we only have 8 locations 0-7
-    command(LCD_SETCGRAMADDR | (location << 3));
-    for (int i=0; i<8; i++) {
-        write(charmap[i]);
-    }
 }
 
 // Turn the (optional) backlight off/on
