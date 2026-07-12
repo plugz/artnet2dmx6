@@ -38,7 +38,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "M95640R.h"
+#include "M95640R.hpp"
 
 /* Defines -------------------------------------------------------------------*/
 
@@ -48,8 +48,21 @@
  * @param spi object of the instance of the spi peripheral
  * @param ns the spi chip select pin
  */
-M95640R::M95640R(SPIClass *spi, int ns) : dev_spi(spi), ns_pin(ns)
-{ 
+M95640R::M95640R()
+{
+}
+
+void M95640R::setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTypeDef* spiHandle,
+                    GPIO_TypeDef* writeGpioPeripheral, uint16_t writeGpio,
+                    GPIO_TypeDef* holdGpioPeripheral, uint16_t holdGpio) {
+    _csPinPeripheral = csPinPeripheral;
+    _csPin = csPin;
+    _spiHandle = spiHandle;
+
+    _writeGpioPeripheral = writeGpioPeripheral;
+    _writeGpio = writeGpio;
+    _holdGpioPeripheral = holdGpioPeripheral;
+    _holdGpio = holdGpio;
 }
 
 /**
@@ -59,9 +72,9 @@ M95640R::M95640R(SPIClass *spi, int ns) : dev_spi(spi), ns_pin(ns)
 */
 void M95640R::begin(void)
 {
-  /* Initialize NS pin */
-  pinMode(ns_pin, OUTPUT);
-  digitalWrite(ns_pin, HIGH);
+    HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(_writeGpioPeripheral, _writeGpio, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(_holdGpioPeripheral, _holdGpio, GPIO_PIN_SET);
 }
 
 /**
@@ -71,8 +84,6 @@ void M95640R::begin(void)
 */
 void M95640R::end(void)
 {
-  /* Reset NS pin */
-  pinMode(ns_pin, INPUT);
 }
 
 /**
@@ -100,19 +111,17 @@ void M95640R::EepromRead(uint16_t nAddress, uint8_t cNbBytes, uint8_t* pcBuffer)
   /* Wait the end of a previous write operation */
   EepromWaitEndWriteOperation();
 
-  dev_spi->beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
-
   /* Put the SPI chip select low to start the transaction */
-  digitalWrite(ns_pin, LOW);
+  HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_RESET);
 
   /* Write the header bytes and read the status bytes */
-  dev_spi->transfer(cmd, 3);
+  HAL_SPI_TransmitReceive(_spiHandle, cmd, cmd, sizeof(cmd), HAL_MAX_DELAY);
 
   /* Read the registers according to the number of bytes */
-  dev_spi->transfer(pcBuffer, cNbBytes);
+  HAL_SPI_Receive(_spiHandle, pcBuffer, cNbBytes, HAL_MAX_DELAY);
 
   /* Put the SPI chip select high to end the transaction */
-  digitalWrite(ns_pin, HIGH);
+  HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_SET);
 
   return;
 }
@@ -148,20 +157,18 @@ void M95640R::EepromWrite(uint16_t nAddress, uint8_t cNbBytes, uint8_t* pcBuffer
     address[k] = (uint8_t)(nAddress>>((1-k)*8));
   }
 
-  dev_spi->beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
-
   /* Put the SPI chip select low to start the transaction */
-  digitalWrite(ns_pin, LOW);
+  HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_RESET);
 
   /* Write the header bytes and read the SPIRIT status bytes */
-  dev_spi->transfer(cmd);
+  HAL_SPI_TransmitReceive(_spiHandle, &cmd, &cmd, sizeof(cmd), HAL_MAX_DELAY);
 
-  dev_spi->transfer(address, 2);
+  HAL_SPI_TransmitReceive(_spiHandle, address, address, sizeof(address), HAL_MAX_DELAY);
 
-  dev_spi->transfer(pcBuffer, cNbBytes);
+  HAL_SPI_Transmit(_spiHandle, pcBuffer, cNbBytes, HAL_MAX_DELAY);
 
   /* Put the SPI chip select high to end the transaction */
-  digitalWrite(ns_pin, HIGH);
+  HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_SET);
 
   return;
 }
@@ -175,24 +182,21 @@ void M95640R::EepromWrite(uint16_t nAddress, uint8_t cNbBytes, uint8_t* pcBuffer
 void M95640R::EepromWaitEndWriteOperation(void)
 {
   uint8_t cmd = EEPROM_CMD_RDSR;
-  uint8_t dummy = 0xFF;
   uint8_t status;
 
-  dev_spi->beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
-
   /* Put the SPI chip select low to start the transaction */
-  digitalWrite(ns_pin, LOW);
+  HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_RESET);
 
   /* Send command */
-  dev_spi->transfer(cmd);
+  HAL_SPI_TransmitReceive(_spiHandle, &cmd, &cmd, sizeof(cmd), HAL_MAX_DELAY);
 
   /* Polling on status register */
   do{
-    status = dev_spi->transfer(dummy);
+    HAL_SPI_Receive(_spiHandle, &status, sizeof(status), HAL_MAX_DELAY);
   }while(status&EEPROM_STATUS_WIP);
 
   /* Put the SPI chip select high to end the transaction */
-  digitalWrite(ns_pin, HIGH);
+  HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_SET);
 
   return;
 }
@@ -206,16 +210,14 @@ void M95640R::EepromWriteEnable(void)
 {
   uint8_t cmd = EEPROM_CMD_WREN;
 
-  dev_spi->beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
-
   /* Put the SPI chip select low to start the transaction */
-  digitalWrite(ns_pin, LOW);
+  HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_RESET);
 
   /* Send command */
-  dev_spi->transfer(cmd);
+  HAL_SPI_TransmitReceive(_spiHandle, &cmd, &cmd, sizeof(cmd), HAL_MAX_DELAY);
 
   /* Put the SPI chip select high to end the transaction */
-  digitalWrite(ns_pin, HIGH);
+  HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_SET);
 
   return;
 }
@@ -229,16 +231,14 @@ uint8_t M95640R::EepromStatus(void)
 {
   uint8_t cmd[2] = {EEPROM_CMD_RDSR, 0xFF};
 
-  dev_spi->beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
-
   /* Put the SPI chip select low to start the transaction */
-  digitalWrite(ns_pin, LOW);
+  HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_RESET);
 
   /* Send command */
-  dev_spi->transfer(cmd, 2);
+  HAL_SPI_TransmitReceive(_spiHandle, cmd, cmd, sizeof(cmd), HAL_MAX_DELAY);
 
   /* Put the SPI chip select high to end the transaction */
-  digitalWrite(ns_pin, HIGH);
+  HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_SET);
 
   return cmd[1];
 }
@@ -252,16 +252,14 @@ uint8_t M95640R::EepromSetSrwd(void)
 {
   uint8_t cmd[2] = {EEPROM_CMD_WRSR, EEPROM_STATUS_SRWD};
 
-  dev_spi->beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
-
   /* Put the SPI chip select low to start the transaction */
-  digitalWrite(ns_pin, LOW);
+  HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_RESET);
 
   /* Send command */
-  dev_spi->transfer(cmd, 2);
+  HAL_SPI_TransmitReceive(_spiHandle, cmd, cmd, sizeof(cmd), HAL_MAX_DELAY);
 
   /* Put the SPI chip select high to end the transaction */
-  digitalWrite(ns_pin, HIGH);
+  HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_SET);
 
   return cmd[1];
 }

@@ -38,12 +38,12 @@
 
 /* Prevent recursive inclusion -----------------------------------------------*/
 
-#ifndef __M95640R_H__
-#define __M95640R_H__
+#ifndef __M95640R_HPP__
+#define __M95640R_HPP__
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "SPI.h"
+#include "gpio.h"
 
 /* Defines -------------------------------------------------------------------*/
 /* EEPROM SPI commands */
@@ -63,14 +63,17 @@
 /* Typedefs ------------------------------------------------------------------*/
 
 /* Class Declaration ---------------------------------------------------------*/
-   
+
 /**
  * Abstract class of a M95640-R EEPROM
  */
 class M95640R
 {
-  public:
-    M95640R(SPIClass *spi, int ns);
+public:
+    M95640R();
+    void setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTypeDef* spiHandle,
+            GPIO_TypeDef* writeGpioPeripheral, uint16_t writeGpio,
+            GPIO_TypeDef* holdGpioPeripheral, uint16_t holdGpio);
     void begin(void);
     void end(void);
     void EepromRead(uint16_t nAddress, uint8_t cNbBytes, uint8_t* pcBuffer);
@@ -80,10 +83,16 @@ class M95640R
     uint8_t EepromStatus(void);
     uint8_t EepromSetSrwd(void);
 
-  private:
+private:
 
-    SPIClass *dev_spi;
-    int ns_pin;
+    GPIO_TypeDef*      _csPinPeripheral;
+    uint16_t           _csPin;
+    SPI_HandleTypeDef* _spiHandle;
+
+    GPIO_TypeDef*      _writeGpioPeripheral;
+    uint16_t           _writeGpio;
+    GPIO_TypeDef*      _holdGpioPeripheral;
+    uint16_t           _holdGpio;
 };
 
-#endif /* __M95640R_H__ */
+#endif

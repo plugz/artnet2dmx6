@@ -58,10 +58,9 @@ A2,A1,A0 tied to ground = 0x20
 #ifndef __MCP23S17_HPP__
 #define __MCP23S17_HPP__
 
-//#include <cstdio>
-#include <cstdint>
-
 #include "gpio.h"
+
+#include <cstdint>
 
 // registers
 static constexpr uint8_t MCP23S17_IODIR =    0x00;

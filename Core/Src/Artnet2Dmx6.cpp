@@ -3,6 +3,7 @@
 #include "ExternalBounce.hpp"
 #include "InputOutputMCPSPI.hpp"
 #include "LiquidCrystalI2C.hpp"
+#include "M95640R.hpp"
 #include "Menu/MainMenu.hpp"
 
 #include "i2c.h"
@@ -12,10 +13,14 @@
 
 static Artnet2Dmx6 artnet2dmx6;
 static uint32_t currentTime;
-static ExternalBounce buttons[7];
-static InputOutputMCPSPI mcp;
+
+static M95640R eeprom;
+
 static LiquidCrystalI2C screen;
 static Menu::MainMenu mainMenu{{&screen, nullptr}};
+
+static InputOutputMCPSPI mcp;
+static ExternalBounce buttons[7];
 static Menu::Button menuButtons[4] = {{&Menu::Menu::up}, {&Menu::Menu::down}, {&Menu::Menu::left}, {&Menu::Menu::right}};
 
 // C part
@@ -54,48 +59,23 @@ void artnet2dmx6_tick() {
 
 // CPP part
 
-// mcp
+// eeprom
 
-static void mcp_setup() {
-    HAL_GPIO_WritePin(MCP_RESET_GPIO_GPIO_Port, MCP_RESET_GPIO_Pin, GPIO_PIN_SET);
-    HAL_Delay(10); // TODO check datasheet
-    mcp.setup(SPI2_NSS2_GPIO_GPIO_Port, SPI2_NSS2_GPIO_Pin, &hspi2, 0x00);
+static void eeprom_setup() {
+    eeprom.setup(SPI2_NSS1_GPIO_GPIO_Port,
+                 SPI2_NSS1_GPIO_Pin,
+                 &hspi2,
+                 EEPROM_WRITE_GPIO_GPIO_Port,
+                 EEPROM_WRITE_GPIO_Pin,
+                 EEPROM_HOLD_GPIO_GPIO_Port,
+                 EEPROM_HOLD_GPIO_Pin);
+    eeprom.begin();
 }
 
-static void mcp_reset() {
-    HAL_GPIO_WritePin(MCP_RESET_GPIO_GPIO_Port, MCP_RESET_GPIO_Pin, GPIO_PIN_RESET);
-    HAL_Delay(10); // TODO check datasheet
-    mcp_setup();
+static void eeprom_reset() {
 }
 
-static void mcp_tick() {
-    mcp.tick();
-}
-
-// buttons
-
-static void buttons_setup() {
-    for (auto& button : buttons) {
-        button.setInterval(5);
-    }
-}
-
-static void buttons_reset() {
-}
-
-static void buttons_tick() {
-    unsigned int i = 0;
-    for (auto& button: buttons) {
-        if (button.update(!mcp.getCurrentValue(i), currentTime)) { // '!' because 0 means pressed
-            if (i < 4)
-                menuButtons[i].updateStatus(button.read());
-        }
-        ++i;
-    }
-
-    for (auto& menuButton: menuButtons) {
-        menuButton.tick();
-    }
+static void eeprom_tick() {
 }
 
 // screen
@@ -112,8 +92,8 @@ static void screen_setup() {
 //    screen.print("0A2345    0B12345   ", true);
 }
 
-static void screen_reset() {
-}
+//static void screen_reset() {
+//}
 
 static void screen_tick() {
     bool sentI2cOrSpi = false;
@@ -129,11 +109,57 @@ static void menu_setup() {
     mainMenu.enable();
 }
 
-static void menu_reset() {
-}
+//static void menu_reset() {
+//}
 
 static void menu_tick() {
 }
+
+// mcp
+
+static void mcp_setup() {
+    HAL_GPIO_WritePin(MCP_RESET_GPIO_GPIO_Port, MCP_RESET_GPIO_Pin, GPIO_PIN_SET);
+    HAL_Delay(10); // TODO check datasheet
+    mcp.setup(SPI2_NSS2_GPIO_GPIO_Port, SPI2_NSS2_GPIO_Pin, &hspi2, 0x00);
+}
+
+//static void mcp_reset() {
+//    HAL_GPIO_WritePin(MCP_RESET_GPIO_GPIO_Port, MCP_RESET_GPIO_Pin, GPIO_PIN_RESET);
+//    HAL_Delay(10); // TODO check datasheet
+//    mcp_setup();
+//}
+
+static void mcp_tick() {
+    mcp.tick();
+}
+
+// buttons
+
+static void buttons_setup() {
+    for (auto& button : buttons) {
+        button.setInterval(5);
+    }
+}
+
+//static void buttons_reset() {
+//}
+
+static void buttons_tick() {
+    unsigned int i = 0;
+    for (auto& button: buttons) {
+        if (button.update(!mcp.getCurrentValue(i), currentTime)) { // '!' because 0 means pressed
+            if (i < 4)
+                menuButtons[i].updateStatus(button.read());
+        }
+        ++i;
+    }
+
+    for (auto& menuButton: menuButtons) {
+        menuButton.tick();
+    }
+}
+
+// main
 
 void Artnet2Dmx6::init_beforehal() {
 //    printf("fuck you\n");
@@ -154,9 +180,12 @@ void Artnet2Dmx6::init_beforeloop() {
     HAL_GPIO_WritePin(PWR_5V_EN_GPIO_GPIO_Port, PWR_5V_EN_GPIO_Pin, GPIO_PIN_SET);
     HAL_Delay(250);
 
-    mcp_setup();
+    eeprom_setup();
+
     screen_setup();
     menu_setup();
+
+    mcp_setup();
     buttons_setup();
 
  //   initialise_monitor_handles();
@@ -164,9 +193,13 @@ void Artnet2Dmx6::init_beforeloop() {
 
 void Artnet2Dmx6::tick() {
     currentTime = HAL_GetTick();
-    mcp_tick();
+
+    eeprom_tick();
+
     screen_tick();
     menu_tick();
+
+    mcp_tick();
     buttons_tick();
 
 //    static uint32_t prevTime = 0;

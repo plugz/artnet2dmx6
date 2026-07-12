@@ -63,6 +63,7 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/ExternalBounce.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/InputOutputMCPSPI.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/LiquidCrystalI2C.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/M95640R.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/MCP23S17.cpp
 
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/Button.cpp
