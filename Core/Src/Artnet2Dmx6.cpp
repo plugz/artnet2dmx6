@@ -86,11 +86,15 @@ static void buttons_reset() {
 static void buttons_tick() {
     unsigned int i = 0;
     for (auto& button: buttons) {
-        if (button.update(!mcp.getCurrentValue(i), currentTime)) { // '!' because 0 low means pressed
+        if (button.update(!mcp.getCurrentValue(i), currentTime)) { // '!' because 0 means pressed
             if (i < 4)
                 menuButtons[i].updateStatus(button.read());
         }
         ++i;
+    }
+
+    for (auto& menuButton: menuButtons) {
+        menuButton.tick();
     }
 }
 
@@ -99,12 +103,13 @@ static void screen_setup() {
     // i2c: 8bit address, not 7bit
     screen.init(&hi2c1, 0b01000000, 20, 4);
     screen.begin();
+
 //    screen.setCursor(0, 0);
-//    screen.print("waaaaa truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuf", true);
+//    screen.print("0A234567890B234567890C234567890D23456789", true);
 //    screen.setCursor(0, 0);
-//    screen.print("waaaao truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu!uuuuuuuuuuuf!", true);
+//    screen.print(" A23456789 B23456789 C23456789 D23456789", true);
 //    screen.setCursor(0, 0);
-//    screen.print("iiiiii truc de ouuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu!uuuuuuddddddd", true);
+//    screen.print("0A2345    0B12345   ", true);
 }
 
 static void screen_reset() {

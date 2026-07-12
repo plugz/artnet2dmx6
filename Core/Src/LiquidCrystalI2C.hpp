@@ -141,9 +141,9 @@ public:
     void autoscroll();
     void noAutoscroll();
     void createChar(uint8_t, uint8_t[]);
-    void setCursor(uint8_t, uint8_t);
+    void setCursor(uint8_t col, uint8_t row, bool doIt = true);
     void write(uint8_t);
-    void advanceCursor(uint8_t count = 1);
+    void advanceCursor(bool doHard);
     void command(uint8_t);
 
     // \0 terminated string
@@ -169,6 +169,8 @@ private:
     uint8_t _rows;
     uint8_t _charsize;
     uint8_t _backlightval;
+    uint8_t _currentHardCol; // actual col in screen
+    uint8_t _currentHardRow; // actual row in screen
     uint8_t _currentCol;
     uint8_t _currentRow;
     uint8_t _currentDisplay[20*4];

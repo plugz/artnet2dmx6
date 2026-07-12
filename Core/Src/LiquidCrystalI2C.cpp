@@ -115,12 +115,16 @@ void LiquidCrystalI2C::home(){
     HAL_Delay(3);
 }
 
-void LiquidCrystalI2C::setCursor(uint8_t col, uint8_t row){
+void LiquidCrystalI2C::setCursor(uint8_t col, uint8_t row, bool doIt){
     int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
     if (row > _rows) {
-        row = _rows-1;    // we count rows starting w/0
+        row = _rows - 1;    // we count rows starting w/0
     }
-    command(LCD_SETDDRAMADDR | (col + row_offsets[row]));
+    if (doIt) {
+        command(LCD_SETDDRAMADDR | (col + row_offsets[row]));
+        _currentHardCol = col;
+        _currentHardRow = row;
+    }
     _currentCol = col;
     _currentRow = row;
 }
@@ -213,7 +217,7 @@ bool LiquidCrystalI2C::getBacklight() {
 
 void LiquidCrystalI2C::printLine(uint8_t line, char const* str) {
     unsigned int len = std::min(strlen(str), (size_t)_cols);
-    setCursor(0, line);
+    setCursor(0, line, false);
     unsigned int i = 0;
     for (; i < len; ++i) {
         write(str[i]);
@@ -239,17 +243,34 @@ inline void LiquidCrystalI2C::command(uint8_t value) {
 inline void LiquidCrystalI2C::write(uint8_t value) {
     auto idx = _currentRow * _cols + _currentCol;
     if (_currentDisplay[idx] != value) {
+        if (_currentHardCol != _currentCol || _currentHardRow != _currentRow)
+            setCursor(_currentCol, _currentRow, true);
         send(value, Rs);
         _currentDisplay[idx] = value;
+        advanceCursor(true);
     }
-    advanceCursor();
+    else {
+        advanceCursor(false);
+    }
 }
 
-void LiquidCrystalI2C::advanceCursor(uint8_t count) {
-    _currentCol += count;
-    if (_currentCol >= _cols) {
-        setCursor(_currentCol % _cols, (_currentRow + _currentCol / _cols) % _rows); // go to next line
+void LiquidCrystalI2C::advanceCursor(bool doHard) {
+    auto newCol = _currentCol + 1;
+    _currentRow = (_currentRow + newCol / _cols) % _rows;
+    _currentCol = newCol % _cols;
+
+    if (doHard) {
+        if (_currentRow != _currentHardRow) {
+            setCursor(_currentCol, _currentRow, true);
+        }
+        _currentHardRow = _currentRow;
+        _currentHardCol = _currentCol;
     }
+//    unsigned int const count = 1;
+//    _currentCol += count;
+//    if (doSet || _currentCol >= _cols) {
+//        setCursor(_currentCol % _cols, (_currentRow + _currentCol / _cols) % _rows); // go to next line
+//    }
 }
 
 
