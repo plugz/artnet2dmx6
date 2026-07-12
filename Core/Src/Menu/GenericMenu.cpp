@@ -7,7 +7,7 @@
 namespace Menu {
 
 enum {
-    LINE_BUFF_SIZE = LiquidCrystalI2C::MAX_COLS + 1,
+    LINE_BUFF_SIZE = LiquidCrystalI2C::COLS + 1,
 };
 
 

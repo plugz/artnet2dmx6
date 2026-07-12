@@ -24,42 +24,30 @@
 // can't assume that its in that state when a sketch starts (and the
 // LiquidCrystal constructor is called).
 
-void LiquidCrystalI2C::init(I2C_HandleTypeDef* i2cHandle, uint8_t lcd_addr, uint8_t lcd_cols, uint8_t lcd_rows, uint8_t charsize)
+void LiquidCrystalI2C::init(I2C_HandleTypeDef* i2cHandle, uint8_t lcd_addr)
 {
     _i2cHandle = i2cHandle;
     _addr = lcd_addr;
-    _cols = lcd_cols;
-    _rows = lcd_rows;
-    _charsize = charsize;
     _backlightval = LCD_BACKLIGHT;
     _currentCol = 0;
     _currentRow = 0;
+    _currentHardCol = 0;
+    _currentHardRow = 0;
     for (auto& current : _currentDisplay)
         current = ' ';
 }
 
 void LiquidCrystalI2C::begin() {
-    _displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
-
-    if (_rows > 1) {
-        _displayfunction |= LCD_2LINE;
-    }
-
-    // for some 1 line displays you can select a 10 pixel high font
-    if ((_charsize != 0) && (_rows == 1)) {
-        _displayfunction |= LCD_5x10DOTS;
-    }
-
     // SEE PAGE 45/46 FOR INITIALIZATION SPECIFICATION!
     // according to datasheet, we need at least 40ms after power rises above 2.7V
-    // before sending commands. Arduino can turn on way befer 4.5V so we'll wait 50
+    // before sending commands.
     //delay(50);
     HAL_Delay(50);
 
     // Now we pull both RS and R/W low to begin commands
     expanderWrite(_backlightval);    // reset expanderand turn backlight off (Bit 8 =1)
     //delay(1000);
-    HAL_Delay(1000);
+    HAL_Delay(6); // wait min 4.1ms ?
 
     //put the LCD into 4 bit mode
     // this is according to the hitachi HD44780 datasheet
@@ -84,7 +72,7 @@ void LiquidCrystalI2C::begin() {
     write4bits(0x02 << 4);
 
     // set # lines, font size, etc.
-    command(LCD_FUNCTIONSET | _displayfunction);
+    command(LCD_FUNCTIONSET | LCD_4BITMODE | LCD_2LINE | LCD_5x8DOTS);
 
     // turn the display on with no cursor or blinking default
     _displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
@@ -117,8 +105,8 @@ void LiquidCrystalI2C::home(){
 
 void LiquidCrystalI2C::setCursor(uint8_t col, uint8_t row, bool doIt){
     int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
-    if (row > _rows) {
-        row = _rows - 1;    // we count rows starting w/0
+    if (row > ROWS) {
+        row = ROWS - 1;    // we count rows starting w/0
     }
     if (doIt) {
         command(LCD_SETDDRAMADDR | (col + row_offsets[row]));
@@ -216,19 +204,19 @@ bool LiquidCrystalI2C::getBacklight() {
 }
 
 void LiquidCrystalI2C::printLine(uint8_t line, char const* str) {
-    unsigned int len = std::min(strlen(str), (size_t)_cols);
+    unsigned int len = std::min(strlen(str), (size_t)COLS);
     setCursor(0, line, false);
     unsigned int i = 0;
     for (; i < len; ++i) {
         write(str[i]);
     }
-    for (; i < _cols; ++i) {
+    for (; i < COLS; ++i) {
         write(' ');
     }
 }
 
 void LiquidCrystalI2C::print(char const* str, bool wrap) {
-    unsigned int charCount = wrap ? strlen(str) : std::min(strlen(str), (size_t)(_cols - _currentCol));
+    unsigned int charCount = wrap ? strlen(str) : std::min(strlen(str), (size_t)(COLS - _currentCol));
     for (unsigned int i = 0; i < charCount; ++i) {
         write(str[i]);
     }
@@ -241,7 +229,7 @@ inline void LiquidCrystalI2C::command(uint8_t value) {
 }
 
 inline void LiquidCrystalI2C::write(uint8_t value) {
-    auto idx = _currentRow * _cols + _currentCol;
+    auto idx = _currentRow * COLS + _currentCol;
     if (_currentDisplay[idx] != value) {
         if (_currentHardCol != _currentCol || _currentHardRow != _currentRow)
             setCursor(_currentCol, _currentRow, true);
@@ -256,8 +244,8 @@ inline void LiquidCrystalI2C::write(uint8_t value) {
 
 void LiquidCrystalI2C::advanceCursor(bool doHard) {
     auto newCol = _currentCol + 1;
-    _currentRow = (_currentRow + newCol / _cols) % _rows;
-    _currentCol = newCol % _cols;
+    _currentRow = (_currentRow + newCol / COLS) % ROWS;
+    _currentCol = newCol % COLS;
 
     if (doHard) {
         if (_currentRow != _currentHardRow) {
@@ -266,11 +254,6 @@ void LiquidCrystalI2C::advanceCursor(bool doHard) {
         _currentHardRow = _currentRow;
         _currentHardCol = _currentCol;
     }
-//    unsigned int const count = 1;
-//    _currentCol += count;
-//    if (doSet || _currentCol >= _cols) {
-//        setCursor(_currentCol % _cols, (_currentRow + _currentCol / _cols) % _rows); // go to next line
-//    }
 }
 
 

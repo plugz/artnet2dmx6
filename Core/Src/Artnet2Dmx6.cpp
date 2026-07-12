@@ -27,17 +27,17 @@ static Menu::Button menuButtons[4] = {{&Menu::Menu::up}, {&Menu::Menu::down}, {&
 
 // C part
 
-int _write(int file, char *ptr, int len)
-{
-  (void)file;
-  int DataIdx;
-
-  for (DataIdx = 0; DataIdx < len; DataIdx++)
-  {
-      ITM_SendChar(*ptr++);
-  }
-  return len;
-}
+//int _write(int file, char *ptr, int len)
+//{
+//  (void)file;
+//  int DataIdx;
+//
+//  for (DataIdx = 0; DataIdx < len; DataIdx++)
+//  {
+//      ITM_SendChar(*ptr++);
+//  }
+//  return len;
+//}
 
 void artnet2dmx6_init_beforehal() {
     artnet2dmx6.init_beforehal();
@@ -95,7 +95,7 @@ static void config_tick() {
 // screen
 static void screen_setup() {
     // i2c: 8bit address, not 7bit
-    screen.init(&hi2c1, 0b01000000, 20, 4);
+    screen.init(&hi2c1, 0b01000000);
     screen.begin();
 
 //    screen.setCursor(0, 0);
@@ -185,9 +185,9 @@ void Artnet2Dmx6::init_afterhal() {
 void Artnet2Dmx6::init_sysinit() {
 }
 
-extern "C" {
-    extern void initialise_monitor_handles(void);
-}
+//extern "C" {
+//    extern void initialise_monitor_handles(void);
+//}
 
 void Artnet2Dmx6::init_beforeloop() {
     // enable secondary 5V

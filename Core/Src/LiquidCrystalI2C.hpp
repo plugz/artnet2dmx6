@@ -4,8 +4,6 @@
 #include "i2c.h"
 
 #include <cstdint>
-//#include <inttypes.h>
-//#include <Print.h>
 
 // commands
 #define LCD_CLEARDISPLAY 0x01
@@ -63,9 +61,11 @@
 class LiquidCrystalI2C {
 public:
     enum {
-        MAX_COLS = 20,
-        MAX_ROWS = 4,
+        COLS = 20,
+        ROWS = 4,
+        CHARSIZE = LCD_5x8DOTS,
     };
+
 public:
     /**
      * Constructor
@@ -76,7 +76,7 @@ public:
      * @param lcd_rows    Number of rows your LCD display has.
      * @param charsize    The size in dots that the display has, use LCD_5x10DOTS or LCD_5x8DOTS.
      */
-    void init(I2C_HandleTypeDef* i2cHandle, uint8_t lcd_addr, uint8_t lcd_cols, uint8_t lcd_rows, uint8_t charsize = LCD_5x8DOTS);
+    void init(I2C_HandleTypeDef* i2cHandle, uint8_t lcd_addr);
 
     /**
      * Set the LCD display in the correct begin state, must be called before anything else is done.
@@ -162,18 +162,16 @@ private:
     void pulseEnable(uint8_t);
     I2C_HandleTypeDef* _i2cHandle;
     uint8_t _addr;
-    uint8_t _displayfunction;
+
     uint8_t _displaycontrol;
     uint8_t _displaymode;
-    uint8_t _cols;
-    uint8_t _rows;
-    uint8_t _charsize;
+
     uint8_t _backlightval;
     uint8_t _currentHardCol; // actual col in screen
     uint8_t _currentHardRow; // actual row in screen
     uint8_t _currentCol;
     uint8_t _currentRow;
-    uint8_t _currentDisplay[20*4];
+    uint8_t _currentDisplay[COLS * ROWS];
 
 //    uint8_t _currentStep;
 };
