@@ -20,7 +20,7 @@ void MCP23S17::setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTy
 
 void MCP23S17::begin() {
     HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_SET);
-    HAL_Delay(100); // TODO check datasheet
+    // HAL_Delay(1); // Datasheet says 100ns CS disable time
 
     if (!s_haenEnabledCSPins[_csPin])
     {
@@ -32,13 +32,6 @@ void MCP23S17::begin() {
         // on the same spi wire, 8 MCP23S17 per CS pin.
         for (uint8_t tempAddr : {0, 4})
         {
-//            LOG_DEBUG("set HAEN on wire ");
-//            LOG_DEBUG(_spiIdx, DEC);
-//            LOG_DEBUG(" on csPin ");
-//            LOG_DEBUG(_csPin, DEC);
-//            LOG_DEBUG(" on addr ");
-//            LOG_DEBUG(tempAddr, DEC);
-//            LOGLN_DEBUG();
             MCP23S17 temp;
             temp.setup(_csPinPeripheral, _csPin, _spiHandle, tempAddr);
             // BANK MIRROR SEQOP DISSLW HAEN ODR INTPOL -NC-

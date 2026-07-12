@@ -133,13 +133,13 @@ static void menu_tick() {
 
 static void mcp_setup() {
     HAL_GPIO_WritePin(MCP_RESET_GPIO_GPIO_Port, MCP_RESET_GPIO_Pin, GPIO_PIN_SET);
-    HAL_Delay(10); // TODO check datasheet
+    // HAL_Delay(0); // datasheet says 0ns from resetHIGH to ready
     mcp.setup(SPI2_NSS2_GPIO_GPIO_Port, SPI2_NSS2_GPIO_Pin, &hspi2, 0x00);
 }
 
 //static void mcp_reset() {
 //    HAL_GPIO_WritePin(MCP_RESET_GPIO_GPIO_Port, MCP_RESET_GPIO_Pin, GPIO_PIN_RESET);
-//    HAL_Delay(10); // TODO check datasheet
+//    HAL_Delay(1); // datasheet says 1us minimum reset pulse width
 //    mcp_setup();
 //}
 
