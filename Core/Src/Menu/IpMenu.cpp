@@ -1,5 +1,6 @@
 #include "IpMenu.hpp"
 
+#include "Config.hpp"
 #include "LiquidCrystalI2C.hpp"
 
 #include <cstdio>
@@ -57,22 +58,20 @@ void IpMenu::right(Button::Event e) {
 }
 
 void IpMenu::_applyConfig() {
-    // TODO
-// !!! callback is on ip, so set subnet FIRST
-//    _common.config->subnet->set(_subnet);
-//    _common.config->ip->set((uint32_t(_ipParts[0]) << 24) | (uint32_t(_ipParts[1]) << 16) |
-//                            (uint32_t(_ipParts[2]) << 8) | (uint32_t(_ipParts[3]) << 0));
+    _common.config->setNetwork(
+            (uint32_t(_ipParts[0]) << 24) | (uint32_t(_ipParts[1]) << 16) |
+            (uint32_t(_ipParts[2]) << 8) | (uint32_t(_ipParts[3]) << 0),
+            _subnet);
 }
 
 void IpMenu::_enable() {
-    //auto ip = _common.config->ip->get(); TODO
-    uint32_t ip = 0x0a000017;
+    uint32_t ip = _common.config->ip();
     _ipParts[0] = (ip >> 24) & 0xff;
     _ipParts[1] = (ip >> 16) & 0xff;
     _ipParts[2] = (ip >> 8) & 0xff;
     _ipParts[3] = (ip >> 0) & 0xff;
 
-    //_subnet = _common.config->subnet->get(); TODO
+    _subnet = _common.config->subnet();
     _subnet = 8;
 
     _editIdx = 0;

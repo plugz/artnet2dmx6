@@ -83,7 +83,7 @@ static void eeprom_tick() {
 // config
 
 static void config_setup() {
-    config.setup();
+    config.setup({}, {});
 }
 
 //Static void config_reset() {

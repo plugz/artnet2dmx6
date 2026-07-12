@@ -28,7 +28,7 @@ void Menu::tick() {}
 
 void Menu::applyConfig(bool changeMenu) {
     _applyConfig();
-//    _common.config->save(); // TODO
+//    _common.config->save(); // TODO ? already done in Config::set*
     if (changeMenu)
         left(Button::Event::PRESS);
 }
