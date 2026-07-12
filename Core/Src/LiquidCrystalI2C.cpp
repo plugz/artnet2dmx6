@@ -105,38 +105,28 @@ void LiquidCrystalI2C::setCursor(uint8_t col, uint8_t row, bool doIt){
     _currentRow = row;
 }
 
-// Turns the underline cursor on/off
-void LiquidCrystalI2C::noCursor() {
-    _displaycontrol &= ~LCD_CURSORON;
-    command(LCD_DISPLAYCONTROL | _displaycontrol);
-}
-void LiquidCrystalI2C::cursor() {
-    _displaycontrol |= LCD_CURSORON;
+// Turn on and off the blinking cursor
+void LiquidCrystalI2C::setCursorBlink(bool blink) {
+    if (blink)
+        _displaycontrol |= LCD_BLINKON;
+    else
+        _displaycontrol &= ~LCD_BLINKON;
     command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
-// Turn on and off the blinking cursor
-void LiquidCrystalI2C::noBlink() {
-    _displaycontrol &= ~LCD_BLINKON;
-    command(LCD_DISPLAYCONTROL | _displaycontrol);
-}
-void LiquidCrystalI2C::blink() {
-    _displaycontrol |= LCD_BLINKON;
+// Turns the underline cursor on/off
+void LiquidCrystalI2C::setCursorDisplay(bool cursor) {
+    if (cursor)
+        _displaycontrol |= LCD_CURSORON;
+    else
+        _displaycontrol &= ~LCD_CURSORON;
     command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
 // Turn the (optional) backlight off/on
-void LiquidCrystalI2C::noBacklight(void) {
-    _backlightval=LCD_NOBACKLIGHT;
+void LiquidCrystalI2C::setBacklight(bool backlight) {
+    _backlightval = backlight ? LCD_BACKLIGHT : LCD_NOBACKLIGHT;
     expanderWrite(0);
-}
-
-void LiquidCrystalI2C::backlight(void) {
-    _backlightval=LCD_BACKLIGHT;
-    expanderWrite(0);
-}
-bool LiquidCrystalI2C::getBacklight() {
-  return _backlightval == LCD_BACKLIGHT;
 }
 
 void LiquidCrystalI2C::printLine(uint8_t line, char const* str) {

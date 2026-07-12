@@ -75,14 +75,14 @@ void IpMenu::_enable() {
     _subnet = 8;
 
     _editIdx = 0;
-    _common.screen->cursor();
-    _common.screen->blink();
+    _common.screen->setCursorDisplay(true);
+    _common.screen->setCursorBlink(true);
     _display();
 }
 
 void IpMenu::_disable() {
-    _common.screen->noCursor();
-    _common.screen->noBlink();
+    _common.screen->setCursorDisplay(false);
+    _common.screen->setCursorBlink(false);
 }
 
 void IpMenu::_display() {

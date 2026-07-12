@@ -83,30 +83,10 @@ public:
      */
     void begin();
 
-    /**
-     * Do not blink the cursor indicator.
-     */
-    void noBlink();
+    void setCursorBlink(bool blink);
+    void setCursorDisplay(bool cursor);
+    void setBacklight(bool backlight);
 
-    /**
-     * Start blinking the cursor indicator.
-     */
-    void blink();
-
-    /**
-     * Do not show a cursor indicator.
-     */
-    void noCursor();
-
-    /**
-      * Show a cursor indicator, cursor can blink on not blink. Use the
-     * methods blink() and noBlink() for changing cursor blink.
-     */
-    void cursor();
-
-    void noBacklight();
-    void backlight();
-    bool getBacklight();
     void setCursor(uint8_t col, uint8_t row, bool doIt = true);
     void write(uint8_t);
     void advanceCursor(bool doHard);
@@ -115,11 +95,6 @@ public:
     // \0 terminated string
     void printLine(uint8_t line, char const* str);
     void print(char const* str, bool wrap = false);
-
-    inline void blink_on() { blink(); }
-    inline void blink_off() { noBlink(); }
-    inline void cursor_on() { cursor(); }
-    inline void cursor_off() { noCursor(); }
 
 private:
     void send(uint8_t, uint8_t);
