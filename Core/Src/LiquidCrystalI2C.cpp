@@ -100,12 +100,14 @@ void LiquidCrystalI2C::begin() {
 void LiquidCrystalI2C::setCursor(uint8_t col, uint8_t row, bool doIt){
     if (doIt) {
         _commandQueue |= CMD_MASK(CMD_MOVECURSOR);
+        _currentCol = col;
+        _currentRow = row;
     }
     else {
         _commandQueue |= CMD_MASK(CMD_MOVECURSORUSER);
+        _moveCursorUserCol = col;
+        _moveCursorUserRow = row;
     }
-    _currentCol = col;
-    _currentRow = row;
 }
 
 // Turn on and off the blinking cursor
@@ -160,7 +162,7 @@ void LiquidCrystalI2C::tick() {
         _write();
     }
     else if (_commandQueue & CMD_MASK(CMD_MOVECURSORUSER)) {
-        _moveCursor();
+        _moveCursorUser();
     }
 }
 
@@ -179,6 +181,9 @@ inline void LiquidCrystalI2C::_command(uint8_t value) {
 
 inline void LiquidCrystalI2C::_write() {
     auto idx = _currentRow * COLS + _currentCol;
+    if (idx == 39) {
+        idx = 39;
+    }
     if (_currentHardDisplay[idx] != _display[idx]) {
         if (_currentHardCol != _currentCol || _currentHardRow != _currentRow) {
             _moveCursor();
@@ -195,7 +200,8 @@ inline void LiquidCrystalI2C::_write() {
         _advanceCursor(false);
     }
 
-    if (_currentRow == 0 && _currentCol == 0) {
+    //if (_currentRow == 0 && _currentCol == 0) {
+    if (idx + 1 == sizeof(_display)) {
         _currentCmd = 0;
         _commandQueue &= ~CMD_MASK(CMD_WRITE);
     }
@@ -207,8 +213,27 @@ void LiquidCrystalI2C::_moveCursor() {
 
     _command(LCD_SETDDRAMADDR | (_currentCol + row_offsets[_currentRow]));
 
+    _currentHardRow = _currentRow;
+    _currentHardCol = _currentCol;
+
     _currentCmd = 0;
     _commandQueue &= ~CMD_MASK(CMD_MOVECURSOR);
+}
+
+void LiquidCrystalI2C::_moveCursorUser() {
+    int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
+    _currentCmd = CMD_MOVECURSORUSER;
+
+    _currentCol = _moveCursorUserCol;
+    _currentRow = _moveCursorUserRow;
+
+    _command(LCD_SETDDRAMADDR | (_currentCol + row_offsets[_currentRow]));
+
+    _currentHardRow = _currentRow;
+    _currentHardCol = _currentCol;
+
+    _currentCmd = 0;
+    _commandQueue &= ~CMD_MASK(CMD_MOVECURSORUSER);
 }
 
 void LiquidCrystalI2C::_backlight() {

@@ -116,9 +116,9 @@ void IpMenu::_displaySubnet() {
 
 void IpMenu::_moveCursor() {
     if (_editIdx < 4)
-        _common.screen->setCursor(_editIdx * 4 + 4, 1);
+        _common.screen->setCursor(_editIdx * 4 + 4, 1, false);
     else
-        _common.screen->setCursor(16, 3);
+        _common.screen->setCursor(16, 3, false);
 }
 
 } // namespace Menu

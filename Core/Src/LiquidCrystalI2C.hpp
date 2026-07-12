@@ -63,7 +63,6 @@ public:
     enum {
         COLS = 20,
         ROWS = 4,
-        CHARSIZE = LCD_5x8DOTS,
     };
 
 public:
@@ -98,6 +97,7 @@ public:
 private:
     void _write();
     void _moveCursor();
+    void _moveCursorUser();
     void _backlight();
     void _displayCtrl();
     void _advanceCursor(bool doHard);
@@ -121,7 +121,7 @@ private:
     uint8_t _display[COLS * ROWS];
 
     enum {
-        CMD_MOVECURSOR = 0,
+        CMD_MOVECURSOR = 1,
         CMD_BACKLIGHT,
         CMD_DISPLAYCTRL,
         CMD_WRITE,
@@ -136,6 +136,9 @@ private:
     uint32_t _currentCmdStep;
 
     uint32_t _currentWriteIdx;
+
+    uint8_t _moveCursorUserRow;
+    uint8_t _moveCursorUserCol;
 };
 
 #endif
