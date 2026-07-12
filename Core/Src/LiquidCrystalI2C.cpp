@@ -33,8 +33,14 @@ void LiquidCrystalI2C::init(I2C_HandleTypeDef* i2cHandle, uint8_t lcd_addr)
     _currentRow = 0;
     _currentHardCol = 0;
     _currentHardRow = 0;
-    for (auto& current : _currentDisplay)
-        current = ' ';
+    std::fill(_currentHardDisplay, _currentHardDisplay + sizeof(_currentHardDisplay), ' ');
+    std::fill(_display, _display + sizeof(_display), ' ');
+
+    _commandQueue = 0;
+    _currentCmd = 0;
+    _currentCmdStep = 0;
+
+//    _writeIdx = COLS * ROWS;
 }
 
 void LiquidCrystalI2C::begin() {
@@ -45,7 +51,7 @@ void LiquidCrystalI2C::begin() {
     HAL_Delay(50);
 
     // Now we pull both RS and R/W low to begin commands
-    expanderWrite(_backlightval);    // reset expanderand turn backlight off (Bit 8 =1)
+    _expanderWrite(_backlightval);    // reset expanderand turn backlight off (Bit 8 =1)
     //delay(1000);
     HAL_Delay(6); // wait min 4.1ms ?
 
@@ -54,52 +60,49 @@ void LiquidCrystalI2C::begin() {
     // figure 24, pg 46
 
     // we start in 8bit mode, try to set 4 bit mode
-    write4bits(0x03 << 4);
+    _write4bits(0x03 << 4);
     //delayMicroseconds(4500); // wait min 4.1ms
     HAL_Delay(6);
 
     // second try
-    write4bits(0x03 << 4);
+    _write4bits(0x03 << 4);
 //    delayMicroseconds(4500); // wait min 4.1ms
     HAL_Delay(6);
 
     // third go!
-    write4bits(0x03 << 4);
+    _write4bits(0x03 << 4);
 //    delayMicroseconds(150);
     HAL_Delay(2);
 
     // finally, set to 4-bit interface
-    write4bits(0x02 << 4);
+    _write4bits(0x02 << 4);
 
     // set # lines, font size, etc.
-    command(LCD_FUNCTIONSET | LCD_4BITMODE | LCD_2LINE | LCD_5x8DOTS);
+    _command(LCD_FUNCTIONSET | LCD_4BITMODE | LCD_2LINE | LCD_5x8DOTS);
 
     // turn the display on with no cursor or blinking default
     _displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
-    command(LCD_DISPLAYCONTROL | _displaycontrol);
+    _command(LCD_DISPLAYCONTROL | _displaycontrol);
 
     // clear it off
-    command(LCD_CLEARDISPLAY);// clear display, set cursor position to zero
+    _command(LCD_CLEARDISPLAY);// clear display, set cursor position to zero
     //delayMicroseconds(2000);  // this command takes a long time!
     HAL_Delay(3);
 
     // set the entry mode
-    command(LCD_ENTRYMODESET | LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT);
+    _command(LCD_ENTRYMODESET | LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT);
 
-    command(LCD_RETURNHOME);  // set cursor position to zero
+    _command(LCD_RETURNHOME);  // set cursor position to zero
     //delayMicroseconds(2000);  // this command takes a long time!
     HAL_Delay(3);
 }
 
 void LiquidCrystalI2C::setCursor(uint8_t col, uint8_t row, bool doIt){
-    int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
-    if (row > ROWS) {
-        row = ROWS - 1;    // we count rows starting w/0
-    }
     if (doIt) {
-        command(LCD_SETDDRAMADDR | (col + row_offsets[row]));
-        _currentHardCol = col;
-        _currentHardRow = row;
+        _commandQueue |= CMD_MASK(CMD_MOVECURSOR);
+    }
+    else {
+        _commandQueue |= CMD_MASK(CMD_MOVECURSORUSER);
     }
     _currentCol = col;
     _currentRow = row;
@@ -111,7 +114,7 @@ void LiquidCrystalI2C::setCursorBlink(bool blink) {
         _displaycontrol |= LCD_BLINKON;
     else
         _displaycontrol &= ~LCD_BLINKON;
-    command(LCD_DISPLAYCONTROL | _displaycontrol);
+    _commandQueue |= CMD_MASK(CMD_DISPLAYCTRL);
 }
 
 // Turns the underline cursor on/off
@@ -120,55 +123,113 @@ void LiquidCrystalI2C::setCursorDisplay(bool cursor) {
         _displaycontrol |= LCD_CURSORON;
     else
         _displaycontrol &= ~LCD_CURSORON;
-    command(LCD_DISPLAYCONTROL | _displaycontrol);
+    _commandQueue |= CMD_MASK(CMD_DISPLAYCTRL);
 }
 
 // Turn the (optional) backlight off/on
 void LiquidCrystalI2C::setBacklight(bool backlight) {
     _backlightval = backlight ? LCD_BACKLIGHT : LCD_NOBACKLIGHT;
-    expanderWrite(0);
+    _commandQueue |= CMD_MASK(CMD_BACKLIGHT);
 }
 
 void LiquidCrystalI2C::printLine(uint8_t line, char const* str) {
     unsigned int len = std::min(strlen(str), (size_t)COLS);
-    setCursor(0, line, false);
-    unsigned int i = 0;
-    for (; i < len; ++i) {
-        write(str[i]);
+    std::copy(str, str + len, _display + line * COLS);
+    std::fill(_display + line * COLS + len, _display + line * COLS + COLS, ' ');
+
+    if (_currentRow >= line) {
+        // when a write command has started, cursor has to move forward right away
+        _currentCol = 0;
+        _currentRow = line;
     }
-    for (; i < COLS; ++i) {
-        write(' ');
+
+    _commandQueue |= CMD_MASK(CMD_WRITE);
+}
+
+void LiquidCrystalI2C::tick() {
+    if (_commandQueue & CMD_MASK(CMD_MOVECURSOR)) {
+        _moveCursor();
+    }
+    else if (_commandQueue & CMD_MASK(CMD_BACKLIGHT)) {
+        _backlight();
+    }
+    else if (_commandQueue & CMD_MASK(CMD_DISPLAYCTRL)) {
+        _displayCtrl();
+    }
+    else if (_commandQueue & CMD_MASK(CMD_WRITE)) {
+        _write();
+    }
+    else if (_commandQueue & CMD_MASK(CMD_MOVECURSORUSER)) {
+        _moveCursor();
     }
 }
 
-void LiquidCrystalI2C::print(char const* str, bool wrap) {
-    unsigned int charCount = wrap ? strlen(str) : std::min(strlen(str), (size_t)(COLS - _currentCol));
-    for (unsigned int i = 0; i < charCount; ++i) {
-        write(str[i]);
-    }
-}
+//void LiquidCrystalI2C::print(char const* str, bool wrap) {
+//    unsigned int charCount = wrap ? strlen(str) : std::min(strlen(str), (size_t)(COLS - _currentCol));
+//    for (unsigned int i = 0; i < charCount; ++i) {
+//        write(str[i]);
+//    }
+//}
 
 /*********** mid level commands, for sending data/cmds */
 
-inline void LiquidCrystalI2C::command(uint8_t value) {
-    send(value, 0);
+inline void LiquidCrystalI2C::_command(uint8_t value) {
+    _send(value, 0);
 }
 
-inline void LiquidCrystalI2C::write(uint8_t value) {
+inline void LiquidCrystalI2C::_write() {
     auto idx = _currentRow * COLS + _currentCol;
-    if (_currentDisplay[idx] != value) {
-        if (_currentHardCol != _currentCol || _currentHardRow != _currentRow)
-            setCursor(_currentCol, _currentRow, true);
-        send(value, Rs);
-        _currentDisplay[idx] = value;
-        advanceCursor(true);
+    if (_currentHardDisplay[idx] != _display[idx]) {
+        if (_currentHardCol != _currentCol || _currentHardRow != _currentRow) {
+            _moveCursor();
+            return;
+        }
+        _currentCmd = CMD_WRITE;
+
+        _send(_display[idx], Rs);
+
+        _currentHardDisplay[idx] = _display[idx];
+        _advanceCursor(true);
     }
     else {
-        advanceCursor(false);
+        _advanceCursor(false);
+    }
+
+    if (_currentRow == 0 && _currentCol == 0) {
+        _currentCmd = 0;
+        _commandQueue &= ~CMD_MASK(CMD_WRITE);
     }
 }
 
-void LiquidCrystalI2C::advanceCursor(bool doHard) {
+void LiquidCrystalI2C::_moveCursor() {
+    int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
+    _currentCmd = CMD_MOVECURSOR;
+
+    _command(LCD_SETDDRAMADDR | (_currentCol + row_offsets[_currentRow]));
+
+    _currentCmd = 0;
+    _commandQueue &= ~CMD_MASK(CMD_MOVECURSOR);
+}
+
+void LiquidCrystalI2C::_backlight() {
+    _currentCmd = CMD_BACKLIGHT;
+
+    _expanderWrite(0);
+
+    _currentCmd = 0;
+    _commandQueue &= ~CMD_MASK(CMD_BACKLIGHT);
+}
+
+void LiquidCrystalI2C::_displayCtrl() {
+    _currentCmd = CMD_DISPLAYCTRL;
+
+    _command(LCD_DISPLAYCONTROL | _displaycontrol);
+
+    _currentCmd = 0;
+    _commandQueue &= ~CMD_MASK(CMD_DISPLAYCTRL);
+}
+
+void LiquidCrystalI2C::_advanceCursor(bool doHard) {
     auto newCol = _currentCol + 1;
     _currentRow = (_currentRow + newCol / COLS) % ROWS;
     _currentCol = newCol % COLS;
@@ -177,8 +238,10 @@ void LiquidCrystalI2C::advanceCursor(bool doHard) {
         if (_currentRow != _currentHardRow) {
             setCursor(_currentCol, _currentRow, true);
         }
-        _currentHardRow = _currentRow;
-        _currentHardCol = _currentCol;
+        else {
+            _currentHardRow = _currentRow;
+            _currentHardCol = _currentCol;
+        }
     }
 }
 
@@ -186,29 +249,29 @@ void LiquidCrystalI2C::advanceCursor(bool doHard) {
 /************ low level data pushing commands **********/
 
 // write either command or data
-void LiquidCrystalI2C::send(uint8_t value, uint8_t mode) {
+void LiquidCrystalI2C::_send(uint8_t value, uint8_t mode) {
     uint8_t highnib=value&0xf0;
     uint8_t lownib=(value<<4)&0xf0;
-    write4bits((highnib)|mode);
-    write4bits((lownib)|mode);
+    _write4bits((highnib)|mode);
+    _write4bits((lownib)|mode);
 }
 
-void LiquidCrystalI2C::write4bits(uint8_t value) {
-    expanderWrite(value);
-    pulseEnable(value);
+void LiquidCrystalI2C::_write4bits(uint8_t value) {
+    _expanderWrite(value);
+    _pulseEnable(value);
 }
 
-void LiquidCrystalI2C::expanderWrite(uint8_t _data){
+void LiquidCrystalI2C::_expanderWrite(uint8_t _data){
     _data |= _backlightval;
     HAL_I2C_Master_Transmit(_i2cHandle, _addr, &_data, 1, 1000);
 }
 
-void LiquidCrystalI2C::pulseEnable(uint8_t _data){
-    expanderWrite(_data | En);    // En high
+void LiquidCrystalI2C::_pulseEnable(uint8_t _data){
+    _expanderWrite(_data | En);    // En high
     //delayMicroseconds(1);        // enable pulse must be >450ns
     HAL_Delay(2);
 
-    expanderWrite(_data & ~En);    // En low
+    _expanderWrite(_data & ~En);    // En low
     //delayMicroseconds(50);        // commands need > 37us to settle
     HAL_Delay(2);
 }

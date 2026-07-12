@@ -88,19 +88,25 @@ public:
     void setBacklight(bool backlight);
 
     void setCursor(uint8_t col, uint8_t row, bool doIt = true);
-    void write(uint8_t);
-    void advanceCursor(bool doHard);
-    void command(uint8_t);
 
     // \0 terminated string
     void printLine(uint8_t line, char const* str);
-    void print(char const* str, bool wrap = false);
+    //void print(char const* str, bool wrap = false);
+
+    void tick();
 
 private:
-    void send(uint8_t, uint8_t);
-    void write4bits(uint8_t);
-    void expanderWrite(uint8_t);
-    void pulseEnable(uint8_t);
+    void _write();
+    void _moveCursor();
+    void _backlight();
+    void _displayCtrl();
+    void _advanceCursor(bool doHard);
+    void _command(uint8_t);
+    void _send(uint8_t, uint8_t);
+    void _write4bits(uint8_t);
+    void _expanderWrite(uint8_t);
+    void _pulseEnable(uint8_t);
+
     I2C_HandleTypeDef* _i2cHandle;
     uint8_t _addr;
 
@@ -111,9 +117,25 @@ private:
     uint8_t _currentHardRow; // actual row in screen
     uint8_t _currentCol;
     uint8_t _currentRow;
-    uint8_t _currentDisplay[COLS * ROWS];
+    uint8_t _currentHardDisplay[COLS * ROWS];
+    uint8_t _display[COLS * ROWS];
 
-//    uint8_t _currentStep;
+    enum {
+        CMD_MOVECURSOR = 0,
+        CMD_BACKLIGHT,
+        CMD_DISPLAYCTRL,
+        CMD_WRITE,
+        CMD_MOVECURSORUSER,
+        CMD_COUNT,
+    };
+
+#define CMD_MASK(cmd) (1 << cmd)
+
+    uint32_t _commandQueue;
+    uint32_t _currentCmd;
+    uint32_t _currentCmdStep;
+
+    uint32_t _currentWriteIdx;
 };
 
 #endif

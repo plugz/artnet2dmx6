@@ -110,11 +110,10 @@ static void screen_setup() {
 //}
 
 static void screen_tick() {
-    bool sentI2cOrSpi = false;
-    bool screenDone = false;
-//    screen.tick(&sentI2cOrSpi, &screenDone, currentTime);
-//    if (screenDone)
-//        serialOut.sendScreenDone();
+    //bool sentI2cOrSpi = false;
+    //bool screenDone = false;
+    screen.tick();
+    //screen.tick(&sentI2cOrSpi, &screenDone, currentTime);
 }
 
 //menu
