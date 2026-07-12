@@ -1,5 +1,6 @@
 #include "Artnet2Dmx6.hpp"
 
+#include "Config.hpp"
 #include "ExternalBounce.hpp"
 #include "InputOutputMCPSPI.hpp"
 #include "LiquidCrystalI2C.hpp"
@@ -15,9 +16,10 @@ static Artnet2Dmx6 artnet2dmx6;
 static uint32_t currentTime;
 
 static M95640R eeprom;
+static Config config{&eeprom};
 
 static LiquidCrystalI2C screen;
-static Menu::MainMenu mainMenu{{&screen, nullptr}};
+static Menu::MainMenu mainMenu{{&screen, &config}};
 
 static InputOutputMCPSPI mcp;
 static ExternalBounce buttons[7];
@@ -72,10 +74,22 @@ static void eeprom_setup() {
     eeprom.begin();
 }
 
-static void eeprom_reset() {
-}
+//Static void eeprom_reset() {
+//}
 
 static void eeprom_tick() {
+}
+
+// config
+
+static void config_setup() {
+    config.setup();
+}
+
+//Static void config_reset() {
+//}
+
+static void config_tick() {
 }
 
 // screen
@@ -181,6 +195,7 @@ void Artnet2Dmx6::init_beforeloop() {
     HAL_Delay(250);
 
     eeprom_setup();
+    config_setup();
 
     screen_setup();
     menu_setup();
@@ -195,6 +210,7 @@ void Artnet2Dmx6::tick() {
     currentTime = HAL_GetTick();
 
     eeprom_tick();
+    config_tick();
 
     screen_tick();
     menu_tick();

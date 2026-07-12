@@ -99,6 +99,6 @@ template<> void GenericMenu<bool>::_displayValue() {
 //template class GenericMenu<unsigned int>;
 //template class GenericMenu<int64_t>;
 //template class GenericMenu<uint64_t>;
-template class GenericMenu<uint32_t>;
+template class GenericMenu<uint16_t>;
 
 } // namespace Menu
