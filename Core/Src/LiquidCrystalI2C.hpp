@@ -137,10 +137,13 @@ private:
     uint32_t _currentCmdStep;
 
     uint8_t _writeByte;
+    uint8_t _writeIdx;
 
     uint8_t _currentCmdRow;
     uint8_t _currentCmdCol;
 
+    //uint8_t _moveCursorRow;
+    //uint8_t _moveCursorCol;
     uint8_t _moveCursorAfterRow;
     uint8_t _moveCursorAfterCol;
 

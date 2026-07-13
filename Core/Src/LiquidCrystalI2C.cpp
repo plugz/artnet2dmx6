@@ -140,9 +140,10 @@ void LiquidCrystalI2C::printLine(uint8_t line, char const* str) {
     std::fill(_display + line * COLS + len, _display + line * COLS + COLS, ' ');
 
     if (_currentRow >= line) {
-        // when a write command has started, cursor has to move forward right away
-        _currentCol = 0;
-        _currentRow = line;
+        // when a write command has started, cursor has to move at the beginning right away
+        //_currentCol = 0;
+        //_currentRow = line;
+        setCursor(0, line, true);
     }
 
     _commandQueue |= CMD_MASK(CMD_WRITE);
@@ -186,26 +187,22 @@ inline void LiquidCrystalI2C::_command(uint8_t value) {
 }
 
 inline void LiquidCrystalI2C::_write() {
-    auto idx = _currentRow * COLS + _currentCol;
     if (_currentCmd != CMD_WRITE) {
-        if (idx == 39) {
-            idx = 39;
-        }
-        if (_currentHardDisplay[idx] != _display[idx]) {
+        _writeIdx = _currentRow * COLS + _currentCol;
+        if (_currentHardDisplay[_writeIdx] != _display[_writeIdx]) {
             if (_currentHardCol != _currentCol || _currentHardRow != _currentRow) {
                 _moveCursor();
                 return;
             }
             _currentCmd = CMD_WRITE;
             _currentCmdStep = 0;
-            _writeByte = _display[idx];
+            _writeByte = _display[_writeIdx];
             return;
         }
         else {
             _advanceCursor(false);
         }
-    }
-    else if (_currentCmdStep == 0) {
+    } else if (_currentCmdStep == 0) {
         // step 0 : send high val & enable pulse
         uint8_t highnib= (_writeByte&0xf0) | Rs;
         highnib |= _backlightval;
@@ -239,15 +236,13 @@ inline void LiquidCrystalI2C::_write() {
             return;
         ++_currentCmdStep;
 
-        _currentHardDisplay[idx] = _writeByte;
+        _currentHardDisplay[_writeIdx] = _writeByte;
         _currentCmd = 0;
-        _currentCmdStep = 0;
-        _advanceCursor(true);
+        _advanceCursor(_commandQueue & CMD_MASK(CMD_MOVECURSOR));
     }
 
-    if (idx + 1 == sizeof(_display)) {
-        if (_currentCmd == CMD_WRITE)
-            _currentCmd = 0;
+    // memcpy as a fail safe because I can't code
+    if ((_writeIdx + 1 == sizeof(_display)) && (_currentCmd == 0)/* && !std::memcmp(_currentHardDisplay, _display, sizeof(_display))*/) {
         _commandQueue &= ~CMD_MASK(CMD_WRITE);
     }
 }
@@ -258,6 +253,9 @@ void LiquidCrystalI2C::_moveCursor() {
         _currentCmd = CMD_MOVECURSOR;
         _currentCmdStep = 0;
         _commandQueue &= ~CMD_MASK(CMD_MOVECURSOR);
+
+        // prolly have to write from here
+        _commandQueue |= CMD_MASK(CMD_WRITE);
 
         _currentCmdCol = _currentCol;
         _currentCmdRow = _currentRow;
@@ -287,6 +285,8 @@ void LiquidCrystalI2C::_moveCursor() {
         if (!_i2cSend(lownib, 2)) // TIMER : 450ns
             return;
 
+        _currentRow = _currentCmdRow;
+        _currentCol = _currentCmdCol;
         _currentHardRow = _currentCmdRow;
         _currentHardCol = _currentCmdCol;
 
