@@ -127,15 +127,19 @@ private:
         CMD_DISPLAYCTRL,
         CMD_WRITE,
         CMD_MOVECURSORAFTER,
-        CMD_COUNT,
+        CMD_LAST,
     };
 #define CMD_MASK(cmd) (1 << cmd)
+#define CMD_COUNT (LiquidCrystalI2C::CMD_LAST - 1)
 
     uint32_t _commandQueue;
     uint32_t _currentCmd;
     uint32_t _currentCmdStep;
 
     uint8_t _writeByte;
+
+    uint8_t _currentCmdRow;
+    uint8_t _currentCmdCol;
 
     uint8_t _moveCursorAfterRow;
     uint8_t _moveCursorAfterCol;

@@ -149,20 +149,26 @@ void LiquidCrystalI2C::printLine(uint8_t line, char const* str) {
 }
 
 void LiquidCrystalI2C::tick() {
-    if (_commandQueue & CMD_MASK(CMD_MOVECURSOR)) {
-        _moveCursor();
+    using Cmd = void (LiquidCrystalI2C::*)(void);
+    static Cmd constexpr cmds[CMD_COUNT] =
+    {
+        &LiquidCrystalI2C::_moveCursor,
+        &LiquidCrystalI2C::_backlight,
+        &LiquidCrystalI2C::_displayCtrl,
+        &LiquidCrystalI2C::_write,
+        &LiquidCrystalI2C::_moveCursorAfter,
+    };
+    for (uint32_t cmd = 1; cmd < CMD_LAST; ++cmd) {
+        if (_currentCmd == cmd) {
+            (this->*cmds[cmd - 1])();
+            return;
+        }
     }
-    else if (_commandQueue & CMD_MASK(CMD_BACKLIGHT)) {
-        _backlight();
-    }
-    else if (_commandQueue & CMD_MASK(CMD_DISPLAYCTRL)) {
-        _displayCtrl();
-    }
-    else if (_commandQueue & CMD_MASK(CMD_WRITE)) {
-        _write();
-    }
-    else if (_commandQueue & CMD_MASK(CMD_MOVECURSORAFTER)) {
-        _moveCursorAfter();
+    for (uint32_t cmd = 1; cmd < CMD_LAST; ++cmd) {
+        if (_commandQueue & CMD_MASK(cmd)) {
+            (this->*cmds[cmd - 1])();
+            return;
+        }
     }
 }
 
@@ -200,23 +206,15 @@ inline void LiquidCrystalI2C::_write() {
         }
     }
     else if (_currentCmdStep == 0) {
-        // step 0 : send high val
+        // step 0 : send high val & enable pulse
         uint8_t highnib= (_writeByte&0xf0) | Rs;
         highnib |= _backlightval;
-        if (!_i2cSend(highnib, 0))
+        highnib |= En;
+        if (!_i2cSend(highnib, 2)) // pulse TIMER : 450ns
             return;
         ++_currentCmdStep;
     }
     else if (_currentCmdStep == 1) {
-        // step 1 : pulse enable
-        uint8_t highnib= (_writeByte&0xf0) | Rs;
-        highnib |= En;
-        highnib |= _backlightval;
-        if (!_i2cSend(highnib, 2)) // TIMER : 450ns
-            return;
-        ++_currentCmdStep;
-    }
-    else if (_currentCmdStep == 2) {
         // step 2 : pulse end
         uint8_t highnib= (_writeByte&0xf0) | Rs;
         highnib |= _backlightval;
@@ -224,24 +222,16 @@ inline void LiquidCrystalI2C::_write() {
             return;
         ++_currentCmdStep;
     }
-    else if (_currentCmdStep == 3) {
-        // step 3 : lownib val send
+    else if (_currentCmdStep == 2) {
+        // step 3 : lownib val send & pulse
         uint8_t lownib=((_writeByte<<4)&0xf0) | Rs;
+        lownib |= En;
         lownib |= _backlightval;
         if (!_i2cSend(lownib, 2))
             return;
         ++_currentCmdStep;
     }
-    else if (_currentCmdStep == 4) {
-        // step 4 : lownib pulse
-        uint8_t lownib=((_writeByte<<4)&0xf0) | Rs;
-        lownib |= En;
-        lownib |= _backlightval;
-        if (!_i2cSend(lownib, 2)) // TIMER : 450ns
-            return;
-        ++_currentCmdStep;
-    }
-    else { // _currentCmdStep == 5
+    else { // _currentCmdStep == 3
         // step 5 : nownib pulse end
         uint8_t lownib=((_writeByte<<4)&0xf0) | Rs;
         lownib |= _backlightval;
@@ -249,7 +239,7 @@ inline void LiquidCrystalI2C::_write() {
             return;
         ++_currentCmdStep;
 
-        _currentHardDisplay[idx] = _display[idx];
+        _currentHardDisplay[idx] = _writeByte;
         _currentCmd = 0;
         _currentCmdStep = 0;
         _advanceCursor(true);
@@ -263,50 +253,149 @@ inline void LiquidCrystalI2C::_write() {
 }
 
 void LiquidCrystalI2C::_moveCursor() {
-    int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
-    _currentCmd = CMD_MOVECURSOR;
+    int constexpr row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
+    if (_currentCmd == 0) {
+        _currentCmd = CMD_MOVECURSOR;
+        _currentCmdStep = 0;
+        _commandQueue &= ~CMD_MASK(CMD_MOVECURSOR);
 
-    _command(LCD_SETDDRAMADDR | (_currentCol + row_offsets[_currentRow]));
+        _currentCmdCol = _currentCol;
+        _currentCmdRow = _currentRow;
+    }
 
-    _currentHardRow = _currentRow;
-    _currentHardCol = _currentCol;
+    uint8_t cmd = LCD_SETDDRAMADDR | (_currentCmdCol + row_offsets[_currentCmdRow]);
+    uint8_t highnib = (cmd & 0xf0) | _backlightval;
+    uint8_t lownib = ((cmd << 4) & 0xf0) | _backlightval;
 
-    _currentCmd = 0;
-    _commandQueue &= ~CMD_MASK(CMD_MOVECURSOR);
+    if (_currentCmdStep == 0) {
+        // step 0 : send high val & enable pulse
+        if (!_i2cSend(highnib | En, 2)) // pulse TIMER : 450ns
+            return;
+    }
+    else if (_currentCmdStep == 1) {
+        // step 2 : pulse end
+        if (!_i2cSend(highnib, 2)) // TIMER : 37us
+            return;
+    }
+    else if (_currentCmdStep == 2) {
+        // step 3 : lownib val send & pulse
+        if (!_i2cSend(lownib | En, 2))
+            return;
+    }
+    else { // _currentCmdStep == 3
+        // step 5 : nownib pulse end
+        if (!_i2cSend(lownib, 2)) // TIMER : 450ns
+            return;
+
+        _currentHardRow = _currentCmdRow;
+        _currentHardCol = _currentCmdCol;
+
+        _currentCmd = 0;
+        _currentCmdStep = 0;
+        return;
+    }
+
+    ++_currentCmdStep;
 }
 
 void LiquidCrystalI2C::_moveCursorAfter() {
-    int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
-    _currentCmd = CMD_MOVECURSORAFTER;
+    int constexpr row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
+    if (_currentCmd == 0) {
+        _currentCmd = CMD_MOVECURSORAFTER;
+        _currentCmdStep = 0;
+        _commandQueue &= ~CMD_MASK(CMD_MOVECURSORAFTER);
 
-    _currentCol = _moveCursorAfterCol;
-    _currentRow = _moveCursorAfterRow;
+        _currentCmdCol = _moveCursorAfterCol;
+        _currentCmdRow = _moveCursorAfterRow;
+    }
 
-    _command(LCD_SETDDRAMADDR | (_currentCol + row_offsets[_currentRow]));
+    uint8_t cmd = LCD_SETDDRAMADDR | (_currentCmdCol + row_offsets[_currentCmdRow]);
+    uint8_t highnib = (cmd & 0xf0) | _backlightval;
+    uint8_t lownib = ((cmd << 4) & 0xf0) | _backlightval;
 
-    _currentHardRow = _currentRow;
-    _currentHardCol = _currentCol;
+    if (_currentCmdStep == 0) {
+        // step 0 : send high val & enable pulse
+        if (!_i2cSend(highnib | En, 2)) // pulse TIMER : 450ns
+            return;
+    }
+    else if (_currentCmdStep == 1) {
+        // step 2 : pulse end
+        if (!_i2cSend(highnib, 2)) // TIMER : 37us
+            return;
+    }
+    else if (_currentCmdStep == 2) {
+        // step 3 : lownib val send & pulse
+        if (!_i2cSend(lownib | En, 2))
+            return;
+    }
+    else { // _currentCmdStep == 3
+        // step 5 : nownib pulse end
+        if (!_i2cSend(lownib, 2)) // TIMER : 450ns
+            return;
 
-    _currentCmd = 0;
-    _commandQueue &= ~CMD_MASK(CMD_MOVECURSORAFTER);
+        _currentRow = _currentCmdRow;
+        _currentCol = _currentCmdCol;
+        _currentHardRow = _currentCmdRow;
+        _currentHardCol = _currentCmdCol;
+
+        _currentCmd = 0;
+        _currentCmdStep = 0;
+        return;
+    }
+
+    ++_currentCmdStep;
 }
 
 void LiquidCrystalI2C::_backlight() {
-    _currentCmd = CMD_BACKLIGHT;
+    if (_currentCmd == 0) {
+        _currentCmd = CMD_BACKLIGHT;
+        _currentCmdStep = 0;
+        _commandQueue &= ~CMD_MASK(CMD_BACKLIGHT);
+    }
 
-    _expanderWrite(0);
-
+    if (_i2cSend(_backlightval, 0))
+        return;
     _currentCmd = 0;
-    _commandQueue &= ~CMD_MASK(CMD_BACKLIGHT);
 }
 
 void LiquidCrystalI2C::_displayCtrl() {
-    _currentCmd = CMD_DISPLAYCTRL;
+    if (_currentCmd == 0) {
+        _currentCmd = CMD_DISPLAYCTRL;
+        _currentCmdStep = 0;
+        _commandQueue &= ~CMD_MASK(CMD_DISPLAYCTRL);
+    }
 
-    _command(LCD_DISPLAYCONTROL | _displaycontrol);
 
-    _currentCmd = 0;
-    _commandQueue &= ~CMD_MASK(CMD_DISPLAYCTRL);
+    uint8_t cmd = LCD_DISPLAYCONTROL | _displaycontrol;
+    uint8_t highnib = (cmd & 0xf0) | _backlightval;
+    uint8_t lownib = ((cmd << 4) & 0xf0) | _backlightval;
+
+    if (_currentCmdStep == 0) {
+        // step 0 : send high val & enable pulse
+        if (!_i2cSend(highnib | En, 2)) // pulse TIMER : 450ns
+            return;
+    }
+    else if (_currentCmdStep == 1) {
+        // step 2 : pulse end
+        if (!_i2cSend(highnib, 2)) // TIMER : 37us
+            return;
+    }
+    else if (_currentCmdStep == 2) {
+        // step 3 : lownib val send & pulse
+        if (!_i2cSend(lownib | En, 2))
+            return;
+    }
+    else { // _currentCmdStep == 3
+        // step 5 : nownib pulse end
+        if (!_i2cSend(lownib, 2)) // TIMER : 450ns
+            return;
+
+        _currentCmd = 0;
+        _currentCmdStep = 0;
+        return;
+    }
+
+    ++_currentCmdStep;
 }
 
 void LiquidCrystalI2C::_advanceCursor(bool doHard) {
