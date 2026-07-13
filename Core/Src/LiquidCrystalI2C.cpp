@@ -97,16 +97,16 @@ void LiquidCrystalI2C::begin() {
     HAL_Delay(3);
 }
 
-void LiquidCrystalI2C::setCursor(uint8_t col, uint8_t row, bool doIt){
-    if (doIt) {
+void LiquidCrystalI2C::setCursor(uint8_t col, uint8_t row, bool now){
+    if (now) {
         _commandQueue |= CMD_MASK(CMD_MOVECURSOR);
         _currentCol = col;
         _currentRow = row;
     }
     else {
-        _commandQueue |= CMD_MASK(CMD_MOVECURSORUSER);
-        _moveCursorUserCol = col;
-        _moveCursorUserRow = row;
+        _commandQueue |= CMD_MASK(CMD_MOVECURSORAFTER);
+        _moveCursorAfterCol = col;
+        _moveCursorAfterRow = row;
     }
 }
 
@@ -161,8 +161,8 @@ void LiquidCrystalI2C::tick() {
     else if (_commandQueue & CMD_MASK(CMD_WRITE)) {
         _write();
     }
-    else if (_commandQueue & CMD_MASK(CMD_MOVECURSORUSER)) {
-        _moveCursorUser();
+    else if (_commandQueue & CMD_MASK(CMD_MOVECURSORAFTER)) {
+        _moveCursorAfter();
     }
 }
 
@@ -275,12 +275,12 @@ void LiquidCrystalI2C::_moveCursor() {
     _commandQueue &= ~CMD_MASK(CMD_MOVECURSOR);
 }
 
-void LiquidCrystalI2C::_moveCursorUser() {
+void LiquidCrystalI2C::_moveCursorAfter() {
     int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
-    _currentCmd = CMD_MOVECURSORUSER;
+    _currentCmd = CMD_MOVECURSORAFTER;
 
-    _currentCol = _moveCursorUserCol;
-    _currentRow = _moveCursorUserRow;
+    _currentCol = _moveCursorAfterCol;
+    _currentRow = _moveCursorAfterRow;
 
     _command(LCD_SETDDRAMADDR | (_currentCol + row_offsets[_currentRow]));
 
@@ -288,7 +288,7 @@ void LiquidCrystalI2C::_moveCursorUser() {
     _currentHardCol = _currentCol;
 
     _currentCmd = 0;
-    _commandQueue &= ~CMD_MASK(CMD_MOVECURSORUSER);
+    _commandQueue &= ~CMD_MASK(CMD_MOVECURSORAFTER);
 }
 
 void LiquidCrystalI2C::_backlight() {

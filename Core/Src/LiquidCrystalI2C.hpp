@@ -86,7 +86,7 @@ public:
     void setCursorDisplay(bool cursor);
     void setBacklight(bool backlight);
 
-    void setCursor(uint8_t col, uint8_t row, bool doIt = true);
+    void setCursor(uint8_t col, uint8_t row, bool now = true); // false -> after
 
     // \0 terminated string
     void printLine(uint8_t line, char const* str);
@@ -97,7 +97,7 @@ public:
 private:
     void _write();
     void _moveCursor();
-    void _moveCursorUser();
+    void _moveCursorAfter();
     void _backlight();
     void _displayCtrl();
     void _advanceCursor(bool doHard);
@@ -126,7 +126,7 @@ private:
         CMD_BACKLIGHT,
         CMD_DISPLAYCTRL,
         CMD_WRITE,
-        CMD_MOVECURSORUSER,
+        CMD_MOVECURSORAFTER,
         CMD_COUNT,
     };
 #define CMD_MASK(cmd) (1 << cmd)
@@ -137,8 +137,8 @@ private:
 
     uint8_t _writeByte;
 
-    uint8_t _moveCursorUserRow;
-    uint8_t _moveCursorUserCol;
+    uint8_t _moveCursorAfterRow;
+    uint8_t _moveCursorAfterCol;
 
     uint32_t _prevCmdFinishTime;
 };
