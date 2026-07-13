@@ -106,6 +106,7 @@ private:
     void _write4bits(uint8_t);
     void _expanderWrite(uint8_t);
     void _pulseEnable(uint8_t);
+    bool _i2cSend(uint8_t val, uint32_t delay);
 
     I2C_HandleTypeDef* _i2cHandle;
     uint8_t _addr;
@@ -128,17 +129,18 @@ private:
         CMD_MOVECURSORUSER,
         CMD_COUNT,
     };
-
 #define CMD_MASK(cmd) (1 << cmd)
 
     uint32_t _commandQueue;
     uint32_t _currentCmd;
     uint32_t _currentCmdStep;
 
-    uint32_t _currentWriteIdx;
+    uint8_t _writeByte;
 
     uint8_t _moveCursorUserRow;
     uint8_t _moveCursorUserCol;
+
+    uint32_t _prevCmdFinishTime;
 };
 
 #endif
