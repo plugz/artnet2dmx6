@@ -131,8 +131,8 @@ private:
         CMD_MOVECURSOR = 1,
         CMD_BACKLIGHT,
         CMD_DISPLAYCTRL,
-        CMD_PRINT,
         CMD_WRITE,
+        CMD_PRINT,
         CMD_MOVECURSORAFTER,
         CMD_LAST,
     };
