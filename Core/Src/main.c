@@ -73,6 +73,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
   artnet2dmx6_init_beforehal();
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -82,14 +83,15 @@ int main(void)
 
   /* USER CODE BEGIN Init */
   artnet2dmx6_init_afterhal();
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
-
   /* USER CODE BEGIN SysInit */
   artnet2dmx6_init_sysinit();
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -106,16 +108,18 @@ int main(void)
   MX_LWIP_Init();
   /* USER CODE BEGIN 2 */
   artnet2dmx6_init_beforeloop();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    /* USER CODE END WHILE */
+
     artnet2dmx6_tick();
+    /* USER CODE BEGIN 3 */
   }
-  /* USER CODE END WHILE */
-  /* USER CODE BEGIN 3 */
   /* USER CODE END 3 */
 }
 
