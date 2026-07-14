@@ -95,11 +95,13 @@ public:
     void tick();
 
 private:
-    void _write();
     void _moveCursor();
-    void _moveCursorAfter();
     void _backlight();
     void _displayCtrl();
+    void _print();
+    void _write();
+    void _moveCursorAfter();
+
     void _advanceCursor(bool doHard);
     void _command(uint8_t);
     void _send(uint8_t, uint8_t);
@@ -116,15 +118,20 @@ private:
 
     uint8_t _currentHardCol; // actual col in screen
     uint8_t _currentHardRow; // actual row in screen
+    uint8_t _currentHardDisplay[COLS * ROWS];
+
     uint8_t _currentCol;
     uint8_t _currentRow;
-    uint8_t _currentHardDisplay[COLS * ROWS];
+
+    uint8_t _printCol;
+    uint8_t _printRow;
     uint8_t _display[COLS * ROWS];
 
     enum {
         CMD_MOVECURSOR = 1,
         CMD_BACKLIGHT,
         CMD_DISPLAYCTRL,
+        CMD_PRINT,
         CMD_WRITE,
         CMD_MOVECURSORAFTER,
         CMD_LAST,
@@ -142,8 +149,6 @@ private:
     uint8_t _currentCmdRow;
     uint8_t _currentCmdCol;
 
-    //uint8_t _moveCursorRow;
-    //uint8_t _moveCursorCol;
     uint8_t _moveCursorAfterRow;
     uint8_t _moveCursorAfterCol;
 
