@@ -4,6 +4,7 @@
 #include "i2c.h"
 
 #include <cstdint>
+#include <functional>
 
 // commands
 #define LCD_CLEARDISPLAY 0x01
@@ -95,6 +96,7 @@ public:
     void tick();
 
 private:
+    void _sendCmd();
     void _moveCursor();
     void _backlight();
     void _displayCtrl();
@@ -128,7 +130,8 @@ private:
     uint8_t _display[COLS * ROWS];
 
     enum {
-        CMD_MOVECURSOR = 1,
+        CMD_SENDCMD = 1,
+        CMD_MOVECURSOR,
         CMD_BACKLIGHT,
         CMD_DISPLAYCTRL,
         CMD_WRITE,
@@ -140,8 +143,13 @@ private:
 #define CMD_COUNT (LiquidCrystalI2C::CMD_LAST - 1)
 
     uint32_t _commandQueue;
-    uint32_t _currentCmd;
-    uint32_t _currentCmdStep;
+    uint8_t _currentCmd;
+    uint8_t _currentCmdStep;
+
+    uint8_t _sendCmdByte;
+    uint8_t _sendCmdByteMode;
+    using SendCmdEndCallback = std::function<void(void)>;
+    SendCmdEndCallback _sendCmdEnd;
 
     uint8_t _writeByte;
     uint8_t _writeIdx;
@@ -152,7 +160,7 @@ private:
     uint8_t _moveCursorAfterRow;
     uint8_t _moveCursorAfterCol;
 
-    uint32_t _prevCmdFinishTime;
+    uint32_t _prevI2cFinishTime;
 };
 
 #endif
