@@ -142,18 +142,16 @@ void LiquidCrystalI2C::printLine(uint8_t line, char const* str) {
     std::copy(str, str + len, _display + line * COLS);
     std::fill(_display + line * COLS + len, _display + line * COLS + COLS, ' ');
 
-//    if (_currentRow >= line) {
-//        // when a write command has started, cursor has to move at the beginning right away
-//        //_currentCol = 0;
-//        //_currentRow = line;
-//        setCursor(0, line, true);
-//    }
     if (_printRow >= line) {
         _printRow = line;
         _printCol = 0;
     }
 
     _commandQueue |= CMD_MASK(CMD_PRINT);
+}
+
+bool LiquidCrystalI2C::ready() const {
+    return !!(_commandQueue | _currentCmd);
 }
 
 void LiquidCrystalI2C::tick() {
@@ -168,16 +166,16 @@ void LiquidCrystalI2C::tick() {
         &LiquidCrystalI2C::_print,
         &LiquidCrystalI2C::_moveCursorAfter,
     };
-    for (uint32_t cmd = 1; cmd < CMD_LAST; ++cmd) {
-        if (_currentCmd == cmd) {
-            (this->*cmds[cmd - 1])();
-            return;
-        }
+    if (_currentCmd) {
+        (this->*cmds[_currentCmd - 1])();
+        return;
     }
-    for (uint32_t cmd = 1; cmd < CMD_LAST; ++cmd) {
-        if (_commandQueue & CMD_MASK(cmd)) {
-            (this->*cmds[cmd - 1])();
-            return;
+    if (_commandQueue) {
+        for (uint32_t cmd = 1; cmd < CMD_LAST; ++cmd) {
+            if (_commandQueue & CMD_MASK(cmd)) {
+                (this->*cmds[cmd - 1])();
+                return;
+            }
         }
     }
 }

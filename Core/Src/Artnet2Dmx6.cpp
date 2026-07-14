@@ -1,4 +1,4 @@
-#include "Artnet2Dmx6.hpp"
+#include "artnet2dmx6.h"
 
 #include "Config.hpp"
 #include "ExternalBounce.hpp"
@@ -12,7 +12,6 @@
 
 #include <cstdio>
 
-static Artnet2Dmx6 artnet2dmx6;
 static uint32_t currentTime;
 
 static M95640R eeprom;
@@ -38,26 +37,6 @@ static Menu::Button menuButtons[4] = {{&Menu::Menu::up}, {&Menu::Menu::down}, {&
 //  }
 //  return len;
 //}
-
-void artnet2dmx6_init_beforehal() {
-    artnet2dmx6.init_beforehal();
-}
-
-void artnet2dmx6_init_afterhal() {
-    artnet2dmx6.init_afterhal();
-}
-
-void artnet2dmx6_init_sysinit() {
-    artnet2dmx6.init_sysinit();
-}
-
-void artnet2dmx6_init_beforeloop() {
-    artnet2dmx6.init_beforeloop();
-}
-
-void artnet2dmx6_tick() {
-    artnet2dmx6.tick();
-}
 
 // CPP part
 
@@ -174,21 +153,21 @@ static void buttons_tick() {
 
 // main
 
-void Artnet2Dmx6::init_beforehal() {
+void artnet2dmx6_init_beforehal() {
 //    printf("fuck you\n");
 }
 
-void Artnet2Dmx6::init_afterhal() {
+void artnet2dmx6_init_afterhal() {
 }
 
-void Artnet2Dmx6::init_sysinit() {
+void artnet2dmx6_init_sysinit() {
 }
 
 //extern "C" {
 //    extern void initialise_monitor_handles(void);
 //}
 
-void Artnet2Dmx6::init_beforeloop() {
+void artnet2dmx6_init_beforeloop() {
     // enable secondary 5V
     HAL_GPIO_WritePin(PWR_5V_EN_GPIO_GPIO_Port, PWR_5V_EN_GPIO_Pin, GPIO_PIN_SET);
     HAL_Delay(250);
@@ -205,7 +184,7 @@ void Artnet2Dmx6::init_beforeloop() {
  //   initialise_monitor_handles();
 }
 
-void Artnet2Dmx6::tick() {
+void artnet2dmx6_tick() {
     currentTime = HAL_GetTick();
 
     eeprom_tick();

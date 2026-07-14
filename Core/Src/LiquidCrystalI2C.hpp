@@ -93,6 +93,9 @@ public:
     void printLine(uint8_t line, char const* str);
     //void print(char const* str, bool wrap = false);
 
+    // return true when no command in queue
+    bool ready() const;
+
     void tick();
 
 private:
