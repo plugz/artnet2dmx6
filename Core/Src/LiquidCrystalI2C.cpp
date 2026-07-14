@@ -1,9 +1,13 @@
 #include "LiquidCrystalI2C.hpp"
 
+#include "Stats.hpp"
+
 #include "i2c.h"
 
 #include <algorithm>
 #include <cstring>
+
+extern Stats a2d6Stats;
 
 // When the display powers up, it is configured as follows:
 //
@@ -39,7 +43,7 @@ void LiquidCrystalI2C::init(I2C_HandleTypeDef* i2cHandle, uint8_t lcd_addr)
     _printCol = COLS;
     _printRow = ROWS;
 
-    _commandQueue = 0;
+    _cmdQueue = 0;
     _currentCmd = 0;
     _currentCmdStep = 0;
 
@@ -102,12 +106,12 @@ void LiquidCrystalI2C::begin() {
 
 void LiquidCrystalI2C::setCursor(uint8_t col, uint8_t row, bool now){
     if (now) {
-        _commandQueue |= CMD_MASK(CMD_MOVECURSOR);
+        _cmdQueue |= CMD_MASK(CMD_MOVECURSOR);
         _currentCol = col;
         _currentRow = row;
     }
     else {
-        _commandQueue |= CMD_MASK(CMD_MOVECURSORAFTER);
+        _cmdQueue |= CMD_MASK(CMD_MOVECURSORAFTER);
         _moveCursorAfterCol = col;
         _moveCursorAfterRow = row;
     }
@@ -119,7 +123,7 @@ void LiquidCrystalI2C::setCursorBlink(bool blink) {
         _displaycontrol |= LCD_BLINKON;
     else
         _displaycontrol &= ~LCD_BLINKON;
-    _commandQueue |= CMD_MASK(CMD_DISPLAYCTRL);
+    _cmdQueue |= CMD_MASK(CMD_DISPLAYCTRL);
 }
 
 // Turns the underline cursor on/off
@@ -128,13 +132,13 @@ void LiquidCrystalI2C::setCursorDisplay(bool cursor) {
         _displaycontrol |= LCD_CURSORON;
     else
         _displaycontrol &= ~LCD_CURSORON;
-    _commandQueue |= CMD_MASK(CMD_DISPLAYCTRL);
+    _cmdQueue |= CMD_MASK(CMD_DISPLAYCTRL);
 }
 
 // Turn the (optional) backlight off/on
 void LiquidCrystalI2C::setBacklight(bool backlight) {
     _backlightval = backlight ? LCD_BACKLIGHT : LCD_NOBACKLIGHT;
-    _commandQueue |= CMD_MASK(CMD_BACKLIGHT);
+    _cmdQueue |= CMD_MASK(CMD_BACKLIGHT);
 }
 
 void LiquidCrystalI2C::printLine(uint8_t line, char const* str) {
@@ -147,11 +151,11 @@ void LiquidCrystalI2C::printLine(uint8_t line, char const* str) {
         _printCol = 0;
     }
 
-    _commandQueue |= CMD_MASK(CMD_PRINT);
+    _cmdQueue |= CMD_MASK(CMD_PRINT);
 }
 
 bool LiquidCrystalI2C::ready() const {
-    return !!(_commandQueue | _currentCmd);
+    return !(_cmdQueue | _currentCmd);
 }
 
 void LiquidCrystalI2C::tick() {
@@ -170,9 +174,9 @@ void LiquidCrystalI2C::tick() {
         (this->*cmds[_currentCmd - 1])();
         return;
     }
-    if (_commandQueue) {
+    if (_cmdQueue) {
         for (uint32_t cmd = 1; cmd < CMD_LAST; ++cmd) {
-            if (_commandQueue & CMD_MASK(cmd)) {
+            if (_cmdQueue & CMD_MASK(cmd)) {
                 (this->*cmds[cmd - 1])();
                 return;
             }
@@ -233,11 +237,10 @@ void LiquidCrystalI2C::_sendCmd() {
 }
 
 void LiquidCrystalI2C::_print() {
-    _commandQueue &= ~CMD_MASK(CMD_PRINT);
-    _commandQueue |= CMD_MASK(CMD_WRITE);
+    _cmdQueue &= ~CMD_MASK(CMD_PRINT);
+    _cmdQueue |= CMD_MASK(CMD_WRITE);
     _currentCol = _printCol;
     _currentRow = _printRow;
-    _moveCursor();
 }
 
 void LiquidCrystalI2C::_write() {
@@ -248,8 +251,8 @@ void LiquidCrystalI2C::_write() {
         _writeIdx = _currentRow * COLS + _currentCol;
     }
 
-    if ((_writeIdx + 1 == sizeof(_display)) && (_currentCmd == 0)) {
-        _commandQueue &= ~CMD_MASK(CMD_WRITE);
+    if (_writeIdx + 1 == sizeof(_display)) {
+        _cmdQueue &= ~CMD_MASK(CMD_WRITE);
         return;
     }
 
@@ -258,23 +261,25 @@ void LiquidCrystalI2C::_write() {
         return;
     }
 
-    _sendCmdByte = _display[_writeIdx];
+    _writeByte = _display[_writeIdx];
+    _sendCmdByte = _writeByte;
     _sendCmdByteMode = Rs;
     _sendCmdEnd = [this](){
         _currentHardDisplay[_writeIdx] = _writeByte;
-        _advanceCursor(_commandQueue & CMD_MASK(CMD_MOVECURSOR));
-        if ((_writeIdx + 1 == sizeof(_display)) && (_currentCmd == 0)) {
-            _commandQueue &= ~CMD_MASK(CMD_WRITE);
+        _advanceCursor(!(_cmdQueue & CMD_MASK(CMD_MOVECURSOR)));
+        if (_writeIdx + 1 == sizeof(_display)) {
+            _cmdQueue &= ~CMD_MASK(CMD_WRITE);
         }
     };
 
+    a2d6Stats.increaseWriteCount();
     _sendCmd();
 }
 
 void LiquidCrystalI2C::_moveCursor() {
     int constexpr row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
 
-    _commandQueue &= ~CMD_MASK(CMD_MOVECURSOR);
+    _cmdQueue &= ~CMD_MASK(CMD_MOVECURSOR);
 
     _currentCmdCol = _currentCol;
     _currentCmdRow = _currentRow;
@@ -288,16 +293,17 @@ void LiquidCrystalI2C::_moveCursor() {
         _currentHardCol = _currentCmdCol;
 
         // prolly have to write from here
-        _commandQueue |= CMD_MASK(CMD_WRITE);
+        _cmdQueue |= CMD_MASK(CMD_WRITE);
     };
 
+    a2d6Stats.increaseMoveCursorCount();
     _sendCmd();
 }
 
 void LiquidCrystalI2C::_moveCursorAfter() {
     int constexpr row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
 
-    _commandQueue &= ~CMD_MASK(CMD_MOVECURSORAFTER);
+    _cmdQueue &= ~CMD_MASK(CMD_MOVECURSORAFTER);
 
     _currentCmdCol = _moveCursorAfterCol;
     _currentCmdRow = _moveCursorAfterRow;
@@ -315,7 +321,7 @@ void LiquidCrystalI2C::_moveCursorAfter() {
 }
 
 void LiquidCrystalI2C::_backlight() {
-    _commandQueue &= ~CMD_MASK(CMD_BACKLIGHT);
+    _cmdQueue &= ~CMD_MASK(CMD_BACKLIGHT);
     _currentCmd = CMD_BACKLIGHT;
 
     if (_i2cSend(_backlightval, 0))
@@ -325,7 +331,7 @@ void LiquidCrystalI2C::_backlight() {
 }
 
 void LiquidCrystalI2C::_displayCtrl() {
-    _commandQueue &= ~CMD_MASK(CMD_DISPLAYCTRL);
+    _cmdQueue &= ~CMD_MASK(CMD_DISPLAYCTRL);
 
     _sendCmdByte = LCD_DISPLAYCONTROL | _displaycontrol;
     _sendCmdByteMode = 0;

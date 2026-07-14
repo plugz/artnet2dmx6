@@ -73,7 +73,4 @@ void ContainerMenu<TSubmenus...>::_display() {
     }
 }
 
-template class ContainerMenu<IpMenu, UniversesMenu>;
-template class ContainerMenu<UniverseMenu, UniverseMenu, UniverseMenu, UniverseMenu, UniverseMenu, UniverseMenu>;
-
 } // namespace Menu

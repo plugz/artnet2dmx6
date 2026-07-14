@@ -16,7 +16,7 @@ IpMenu::IpMenu(CommonStuff const& common)
 
 IpMenu::~IpMenu() {}
 
-char const* IpMenu::name() { return "IP ADDRESS"; }
+char const* IpMenu::name() { return "IP Config"; }
 
 void IpMenu::up(Button::Event e) {
     if (e != Button::Event::PRESS && e != Button::Event::REPEAT)

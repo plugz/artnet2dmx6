@@ -1,5 +1,7 @@
 #include "UniversesMenu.hpp"
 
+#include "ContainerMenu.ipp"
+
 namespace Menu {
 
 UniversesMenu::UniversesMenu(CommonStuff const& common)

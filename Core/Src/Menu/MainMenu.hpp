@@ -3,11 +3,12 @@
 
 #include "ContainerMenu.hpp"
 #include "IpMenu.hpp"
+#include "StatsMenu.hpp"
 #include "UniversesMenu.hpp"
 
 namespace Menu {
 
-using MainMenuContainer = ContainerMenu<IpMenu, UniversesMenu>;
+using MainMenuContainer = ContainerMenu<StatsMenu, IpMenu, UniversesMenu>;
 
 class MainMenu : public MainMenuContainer
 {

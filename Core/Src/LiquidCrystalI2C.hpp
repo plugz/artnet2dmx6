@@ -4,6 +4,7 @@
 #include "i2c.h"
 
 #include <cstdint>
+#include <cstdio>
 #include <functional>
 
 // commands
@@ -91,6 +92,14 @@ public:
 
     // \0 terminated string
     void printLine(uint8_t line, char const* str);
+
+    template<typename T, typename...Ts>
+    void printLine(uint8_t line, char const* str, T firstArg, Ts... nextArgs) {
+        char buff[COLS + 1];
+        snprintf(buff, sizeof(buff), str, firstArg, nextArgs...);
+        printLine(line, buff);
+    }
+
     //void print(char const* str, bool wrap = false);
 
     // return true when no command in queue
@@ -145,7 +154,7 @@ private:
 #define CMD_MASK(cmd) (1 << cmd)
 #define CMD_COUNT (LiquidCrystalI2C::CMD_LAST - 1)
 
-    uint32_t _commandQueue;
+    uint32_t _cmdQueue;
     uint8_t _currentCmd;
     uint8_t _currentCmdStep;
 

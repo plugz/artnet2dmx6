@@ -6,6 +6,7 @@
 #include "LiquidCrystalI2C.hpp"
 #include "M95640R.hpp"
 #include "Menu/MainMenu.hpp"
+#include "Stats.hpp"
 
 #include "i2c.h"
 #include "spi.h"
@@ -23,6 +24,8 @@ static Menu::MainMenu mainMenu{{&screen, &config}};
 static InputOutputMCPSPI mcp;
 static ExternalBounce buttons[7];
 static Menu::Button menuButtons[4] = {{&Menu::Menu::up}, {&Menu::Menu::down}, {&Menu::Menu::left}, {&Menu::Menu::right}};
+
+Stats a2d6Stats;
 
 // C part
 
@@ -105,6 +108,7 @@ static void menu_setup() {
 //}
 
 static void menu_tick() {
+    Menu::Menu::current()->tick();
 }
 
 // mcp
@@ -151,6 +155,17 @@ static void buttons_tick() {
     }
 }
 
+// stats
+static void stats_setup() {
+}
+
+//static void stats_reset() {
+//}
+
+static void stats_tick() {
+    a2d6Stats.tick();
+}
+
 // main
 
 void artnet2dmx6_init_beforehal() {
@@ -181,6 +196,8 @@ void artnet2dmx6_init_beforeloop() {
     mcp_setup();
     buttons_setup();
 
+    stats_setup();
+
  //   initialise_monitor_handles();
 }
 
@@ -195,6 +212,8 @@ void artnet2dmx6_tick() {
 
     mcp_tick();
     buttons_tick();
+
+    stats_tick();
 
 //    static uint32_t prevTime = 0;
 //    static int i = 0;

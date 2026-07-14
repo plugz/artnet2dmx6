@@ -1,5 +1,7 @@
 #include "MainMenu.hpp"
 
+#include "ContainerMenu.ipp"
+
 namespace Menu {
 
 MainMenu::MainMenu(CommonStuff const& common)
