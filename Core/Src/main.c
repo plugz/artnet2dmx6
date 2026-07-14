@@ -105,10 +105,9 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   MX_USB_DEVICE_Init();
-  //MX_LWIP_Init(); // init after having read the config
+  //MX_LWIP_Init(); // do everything lwip in artnet2dmx6
   /* USER CODE BEGIN 2 */
   artnet2dmx6_init_beforeloop();
-  MX_LWIP_Init();
 
   /* USER CODE END 2 */
 

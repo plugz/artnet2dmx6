@@ -514,6 +514,7 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef* ethHandle)
 
   /* USER CODE BEGIN ETH_MspInit 1 */
 
+    // Reset the KSZ8081
     HAL_GPIO_WritePin(ETH_RST_GPIO_GPIO_Port, ETH_RST_GPIO_Pin, GPIO_PIN_RESET);
     HAL_Delay(1);
     HAL_GPIO_WritePin(ETH_RST_GPIO_GPIO_Port, ETH_RST_GPIO_Pin, GPIO_PIN_SET);

@@ -272,7 +272,6 @@ void LiquidCrystalI2C::_write() {
         }
     };
 
-    a2d6Stats.increaseWriteCount();
     _sendCmd();
 }
 
@@ -296,7 +295,6 @@ void LiquidCrystalI2C::_moveCursor() {
         _cmdQueue |= CMD_MASK(CMD_WRITE);
     };
 
-    a2d6Stats.increaseMoveCursorCount();
     _sendCmd();
 }
 

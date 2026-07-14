@@ -11,6 +11,7 @@
 #include "i2c.h"
 #include "lwip.h"
 #include "spi.h"
+#include "udp.h"
 
 #include <cstdio>
 
@@ -27,6 +28,8 @@ static ExternalBounce buttons[7];
 static Menu::Button menuButtons[4] = {{&Menu::Menu::up}, {&Menu::Menu::down}, {&Menu::Menu::left}, {&Menu::Menu::right}};
 
 Stats a2d6Stats;
+
+udp_pcb* udp;
 
 // C part
 
@@ -183,6 +186,18 @@ void artnet2dmx6_init_sysinit() {
 //    extern void initialise_monitor_handles(void);
 //}
 
+static void udp_receive_callback(
+        void *arg,
+        struct udp_pcb *pcb,
+        struct pbuf *p,
+        const ip_addr_t *addr,
+        u16_t port) {
+    a2d6Stats.increaseWriteCount();
+
+    pbuf_free(p);
+}
+
+
 void artnet2dmx6_init_beforeloop() {
     // enable secondary 5V
     HAL_GPIO_WritePin(PWR_5V_EN_GPIO_GPIO_Port, PWR_5V_EN_GPIO_Pin, GPIO_PIN_SET);
@@ -198,6 +213,12 @@ void artnet2dmx6_init_beforeloop() {
     buttons_setup();
 
     stats_setup();
+
+    MX_LWIP_Init();
+
+    udp = udp_new();
+    udp_bind(udp, IP_ADDR_ANY, 4455);
+    udp_recv(udp, udp_receive_callback, nullptr);
 
  //   initialise_monitor_handles();
 }
