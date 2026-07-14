@@ -105,9 +105,10 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   MX_USB_DEVICE_Init();
-  MX_LWIP_Init();
+  //MX_LWIP_Init(); // init after having read the config
   /* USER CODE BEGIN 2 */
   artnet2dmx6_init_beforeloop();
+  MX_LWIP_Init();
 
   /* USER CODE END 2 */
 
@@ -166,7 +167,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  HAL_RCC_MCOConfig(RCC_MCO2, RCC_MCO2SOURCE_SYSCLK, RCC_MCODIV_1);
+  HAL_RCC_MCOConfig(RCC_MCO2, RCC_MCO2SOURCE_HSE, RCC_MCODIV_1);
 }
 
 /* USER CODE BEGIN 4 */

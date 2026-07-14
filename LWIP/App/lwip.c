@@ -22,12 +22,13 @@
 #include "lwip.h"
 #include "lwip/init.h"
 #include "lwip/netif.h"
-#if defined ( __CC_ARM )  /* MDK ARM Compiler */
+#if (defined ( __CC_ARM ) || defined (__ARMCC_VERSION))  /* MDK ARM Compiler */
 #include "lwip/sio.h"
 #endif /* MDK ARM Compiler */
 #include "ethernetif.h"
 
 /* USER CODE BEGIN 0 */
+#include "artnet2dmx6.h"
 
 /* USER CODE END 0 */
 /* Private function prototypes -----------------------------------------------*/
@@ -74,6 +75,7 @@ void MX_LWIP_Init(void)
   GATEWAY_ADDRESS[3] = 0;
 
 /* USER CODE BEGIN IP_ADDRESSES */
+  artnet2dmx6_lwip_init_bfor(IP_ADDRESS, NETMASK_ADDRESS, GATEWAY_ADDRESS);
 /* USER CODE END IP_ADDRESSES */
 
   /* Initialize the LwIP stack without RTOS */
@@ -175,7 +177,7 @@ static void ethernet_link_status_updated(struct netif *netif)
   }
 }
 
-#if defined ( __CC_ARM )  /* MDK ARM Compiler */
+#if (defined ( __CC_ARM ) || defined (__ARMCC_VERSION))  /* MDK ARM Compiler */
 /**
  * Opens a serial device for communication.
  *

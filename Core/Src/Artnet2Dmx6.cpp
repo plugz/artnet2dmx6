@@ -9,6 +9,7 @@
 #include "Stats.hpp"
 
 #include "i2c.h"
+#include "lwip.h"
 #include "spi.h"
 
 #include <cstdio>
@@ -168,8 +169,8 @@ static void stats_tick() {
 
 // main
 
+
 void artnet2dmx6_init_beforehal() {
-//    printf("fuck you\n");
 }
 
 void artnet2dmx6_init_afterhal() {
@@ -215,16 +216,23 @@ void artnet2dmx6_tick() {
 
     stats_tick();
 
-//    static uint32_t prevTime = 0;
-//    static int i = 0;
-//    if (currentTime > prevTime + 2000) {
-////        printf("fuuuuuck\n");
-////        screen.printline((0 + i) % 4, "fuck");
-////        screen.printline((1 + i) % 4, "this");
-////        screen.printline((2 + i) % 4, "shit");
-////        screen.printline((3 + i) % 4, "!");
-////        screen.setBacklight(i % 2);
-//        ++i;
-//        prevTime = currentTime;
-//    }
+    MX_LWIP_Process();
+}
+
+//lwip
+void artnet2dmx6_lwip_init_bfor(uint8_t* ip, uint8_t* mask, uint8_t* gateway) {
+    uint32_t const cfgIp = config.ip();
+    ip[0] = uint8_t(cfgIp >> 24);
+    ip[1] = uint8_t(cfgIp >> 16);
+    ip[2] = uint8_t(cfgIp >> 8);
+    ip[3] = uint8_t(cfgIp >> 0);
+
+    uint32_t const cfgSubnet = config.subnet();
+    uint32_t const subnetMask = (cfgSubnet ? ~(uint64_t(1 << (32 - cfgSubnet)) - 1) : 0);
+    mask[0] = uint8_t(subnetMask >> 24);
+    mask[1] = uint8_t(subnetMask >> 16);
+    mask[2] = uint8_t(subnetMask >> 8);
+    mask[3] = uint8_t(subnetMask >> 0);
+
+    (void)gateway;
 }
