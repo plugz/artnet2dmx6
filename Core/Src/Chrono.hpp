@@ -4,7 +4,8 @@
 #include <chrono>
 #include <cstdint>
 
-#include "main.h"
+//#include "main.h"
+#include "tim.h"
 
 using Milliseconds = std::chrono::duration<uint32_t, std::ratio<1, 1000>>;
 using Microseconds = std::chrono::duration<uint32_t, std::ratio<1, 1000000>>;
@@ -39,13 +40,17 @@ inline MsTimePoint MsClock::now() {
 
 template<>
 inline UsTimePoint UsClock::now() {
-    return time_point(duration(HAL_GetTick())); // TODO TODO TODOOOOOooo
+    return time_point(duration(__HAL_TIM_GET_COUNTER(&htim5)));
 }
 
 struct Chrono {
     template<typename TDuration>
     static inline void delay(TDuration const& duration) {
         Clock<TDuration>::delay(duration);
+    }
+
+    static inline void init() {
+        HAL_TIM_Base_Start(&htim5);
     }
 };
 

@@ -202,6 +202,8 @@ static void udp_receive_callback(
 
 
 void artnet2dmx6_init_beforeloop() {
+    Chrono::init();
+
     // enable secondary 5V
     HAL_GPIO_WritePin(PWR_5V_EN_GPIO_GPIO_Port, PWR_5V_EN_GPIO_Pin, GPIO_PIN_SET);
     Chrono::delay(Milliseconds(250));

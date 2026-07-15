@@ -21,6 +21,7 @@
 #include "i2c.h"
 #include "lwip.h"
 #include "spi.h"
+#include "tim.h"
 #include "usart.h"
 #include "usb_device.h"
 #include "gpio.h"
@@ -105,6 +106,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   MX_USB_DEVICE_Init();
+  MX_TIM5_Init();
   //MX_LWIP_Init(); // do everything lwip in artnet2dmx6
   /* USER CODE BEGIN 2 */
   artnet2dmx6_init_beforeloop();
