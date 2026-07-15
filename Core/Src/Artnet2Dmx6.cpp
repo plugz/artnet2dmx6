@@ -1,5 +1,6 @@
 #include "artnet2dmx6.h"
 
+#include "Chrono.hpp"
 #include "Config.hpp"
 #include "ExternalBounce.hpp"
 #include "InputOutputMCPSPI.hpp"
@@ -28,6 +29,9 @@ static ExternalBounce buttons[7];
 static Menu::Button menuButtons[4] = {{&Menu::Menu::up}, {&Menu::Menu::down}, {&Menu::Menu::left}, {&Menu::Menu::right}};
 
 Stats a2d6Stats;
+
+static MsTimer msTimer{Milliseconds{1500}};
+static UsTimer usTimer(Microseconds{1500000});
 
 udp_pcb* udp;
 
@@ -192,7 +196,7 @@ static void udp_receive_callback(
         struct pbuf *p,
         const ip_addr_t *addr,
         u16_t port) {
-    a2d6Stats.increaseWriteCount();
+    a2d6Stats.increaseCounter(3);
 
     pbuf_free(p);
 }
@@ -220,6 +224,9 @@ void artnet2dmx6_init_beforeloop() {
     udp_bind(udp, IP_ADDR_ANY, 4455);
     udp_recv(udp, udp_receive_callback, nullptr);
 
+    msTimer.reset();
+    usTimer.reset();
+
  //   initialise_monitor_handles();
 }
 
@@ -238,6 +245,15 @@ void artnet2dmx6_tick() {
     stats_tick();
 
     MX_LWIP_Process();
+
+    if (msTimer.done()) {
+        msTimer.advance();
+        a2d6Stats.increaseCounter(0);
+    }
+    if (usTimer.done()) {
+        usTimer.advance();
+        a2d6Stats.increaseCounter(1);
+    }
 }
 
 //lwip

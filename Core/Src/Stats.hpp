@@ -5,21 +5,19 @@
 
 class Stats {
 public:
+    enum {COUNTER_COUNT = 6};
+public:
     void tick();
 
-    void increaseWriteCount() { ++_writeCount; }
-    void increaseMoveCursorCount() { ++_moveCursorCount; }
-
-    inline uint32_t writeCount() { return _writeCount; }
-    inline uint32_t moveCursorCount() { return _moveCursorCount; }
-    inline uint32_t elapsedTimeMs() const { return _elapsedTimeMs; }
     inline uint32_t tickCount() const { return _tickCount; }
 
+    void increaseCounter(int idx) { ++_counters[idx]; }
+    void setCounter(int idx, uint32_t val) { _counters[idx] = val; }
+    uint32_t counter(int idx) { return _counters[idx]; }
+
 private:
-    uint32_t _writeCount = 0;
-    uint32_t _moveCursorCount = 0;
-    uint32_t _elapsedTimeMs = 0;
     uint32_t _tickCount = 0;
+    uint32_t _counters[COUNTER_COUNT];
 };
 
 #endif

@@ -1,11 +1,14 @@
 #ifndef __MENU_STATSMENU_HPP__
 #define __MENU_STATSMENU_HPP__
 
+#include "Chrono.hpp"
 #include "Menu.hpp"
 
 namespace Menu {
 
 class StatsMenu : public Menu {
+public:
+    enum { REFRESH_PERIOD_MS = 200 };
 public:
     StatsMenu(CommonStuff const& common);
     virtual ~StatsMenu();
@@ -23,7 +26,7 @@ protected:
     virtual void _display() override;
 
 private:
-    uint32_t _prevRefreshTime = 0;
+    MsTimer _refreshTimer{Milliseconds{REFRESH_PERIOD_MS}};
 };
 
 } // namespace Menu
