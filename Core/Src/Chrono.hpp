@@ -18,6 +18,10 @@ struct Clock
     using time_point = std::chrono::time_point<Clock>;
 
     inline static time_point now();
+    inline static void delay(duration const& d) {
+        auto startPoint = now();
+        while (now() - startPoint < d) {}
+    }
 
     static constexpr bool is_steady =             false;
 };
@@ -37,6 +41,13 @@ template<>
 inline UsTimePoint UsClock::now() {
     return time_point(duration(HAL_GetTick())); // TODO TODO TODOOOOOooo
 }
+
+struct Chrono {
+    template<typename TDuration>
+    static inline void delay(TDuration const& duration) {
+        Clock<TDuration>::delay(duration);
+    }
+};
 
 template<typename TClock>
 class Timer {

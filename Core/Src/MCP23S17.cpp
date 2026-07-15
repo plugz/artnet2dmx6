@@ -1,5 +1,7 @@
 #include "MCP23S17.hpp"
 
+#include "Chrono.hpp"
+
 #include <initializer_list>
 
 static uint8_t s_haenEnabledCSPins[256] = {0,};
@@ -20,7 +22,7 @@ void MCP23S17::setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTy
 
 void MCP23S17::begin() {
     HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_SET);
-    // HAL_Delay(1); // Datasheet says 100ns CS disable time
+    Chrono::delay(Microseconds{2}); // Datasheet says 100ns CS disable time
 
     if (!s_haenEnabledCSPins[_csPin])
     {

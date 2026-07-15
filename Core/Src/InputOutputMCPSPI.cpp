@@ -1,5 +1,7 @@
 #include "InputOutputMCPSPI.hpp"
 
+#include "Chrono.hpp"
+
 #include "spi.h"
 
 void InputOutputMCPSPI::setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTypeDef* spiHandle, uint8_t haenAddr) {
@@ -8,7 +10,7 @@ void InputOutputMCPSPI::setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI
     setPullupPortA(true); // enable pullup on port A
     gpioPinModePortB(false); // enable output mode on port B
 
-    HAL_Delay(1); // let pullups do their job
+    Chrono::delay(Milliseconds(2)); // let pullups do their job
     read();
     write();
 }
