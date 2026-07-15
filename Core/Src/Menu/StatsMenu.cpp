@@ -40,7 +40,7 @@ void StatsMenu::_enable() {
 void StatsMenu::_disable() {}
 
 void StatsMenu::_display() {
-    _common.screen->printLine(0, "t:%u ms:%u", a2d6Stats.tickCount(), MsClock::now().time_since_epoch().count());
+    _common.screen->printLine(0, "t:%u ms:%u", a2d6Stats.tickCount(), Chrono::MsClock::now().time_since_epoch().count());
     _common.screen->printLine(1, "c0:%u, c1:%u", a2d6Stats.counter(0), a2d6Stats.counter(1));
     _common.screen->printLine(2, "c0:%u, c1:%u", a2d6Stats.counter(2), a2d6Stats.counter(3));
     _common.screen->printLine(3, "c0:%u, c1:%u", a2d6Stats.counter(4), a2d6Stats.counter(5));

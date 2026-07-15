@@ -35,7 +35,7 @@ void Button::tick() {
     }
 }
 
-void Button::_sendRepeat(Milliseconds period) {
+void Button::_sendRepeat(Chrono::Milliseconds period) {
     if (!_longPressRepeatTimer.done(period))
         return;
 

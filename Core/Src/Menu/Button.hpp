@@ -20,11 +20,11 @@ public:
 public:
     using MenuCallback = void (Menu::*)(Event);
 
-    static constexpr Milliseconds LONG_PRESS_TIME{500};
-    static constexpr Milliseconds LONG_LONG_PRESS_TIME{LONG_PRESS_TIME * 4};
+    static constexpr Chrono::Milliseconds LONG_PRESS_TIME{500};
+    static constexpr Chrono::Milliseconds LONG_LONG_PRESS_TIME{LONG_PRESS_TIME * 4};
 
-    static constexpr Milliseconds LONG_PRESS_REPEAT_PERIOD{50};
-    static constexpr Milliseconds LONG_LONG_PRESS_REPEAT_PERIOD{5};
+    static constexpr Chrono::Milliseconds LONG_PRESS_REPEAT_PERIOD{50};
+    static constexpr Chrono::Milliseconds LONG_LONG_PRESS_REPEAT_PERIOD{5};
 
 public:
     Button(MenuCallback cb);
@@ -36,11 +36,11 @@ public:
     bool pressed() const;
 
 private:
-    void _sendRepeat(Milliseconds period);
+    void _sendRepeat(Chrono::Milliseconds period);
 
     bool _pressed;
-    MsTimer _longPressTimer;
-    MsTimer _longPressRepeatTimer;
+    Chrono::MsTimer _longPressTimer;
+    Chrono::MsTimer _longPressRepeatTimer;
     MenuCallback _cb;
 };
 

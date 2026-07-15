@@ -28,8 +28,8 @@ static Menu::Button menuButtons[4] = {{&Menu::Menu::up}, {&Menu::Menu::down}, {&
 
 Stats a2d6Stats;
 
-static MsTimer msTimer{Milliseconds{1500}};
-static UsTimer usTimer(Microseconds{1500000});
+static Chrono::MsTimer msTimer{Chrono::Milliseconds{1500}};
+static Chrono::UsTimer usTimer(Chrono::Microseconds{1500000});
 
 udp_pcb* udp;
 
@@ -121,13 +121,13 @@ static void menu_tick() {
 
 static void mcp_setup() {
     HAL_GPIO_WritePin(MCP_RESET_GPIO_GPIO_Port, MCP_RESET_GPIO_Pin, GPIO_PIN_SET);
-    // Chrono::delay(Microseconds{0}); // datasheet says 0ns from resetHIGH to ready
+    // Chrono::delay(Chrono::Microseconds{0}); // datasheet says 0ns from resetHIGH to ready
     mcp.setup(SPI2_NSS2_GPIO_GPIO_Port, SPI2_NSS2_GPIO_Pin, &hspi2, 0x00);
 }
 
 //static void mcp_reset() {
 //    HAL_GPIO_WritePin(MCP_RESET_GPIO_GPIO_Port, MCP_RESET_GPIO_Pin, GPIO_PIN_RESET);
-//    Chrono::delay(Microseconds{2}); // datasheet says 1us minimum reset pulse width
+//    Chrono::delay(Chrono::Microseconds{2}); // datasheet says 1us minimum reset pulse width
 //    mcp_setup();
 //}
 
@@ -148,7 +148,7 @@ static void buttons_setup() {
 
 static void buttons_tick() {
     unsigned int i = 0;
-    auto nowMs = MsClock::now();
+    auto nowMs = Chrono::MsClock::now();
     for (auto& button: buttons) {
         if (button.update(!mcp.getCurrentValue(i), nowMs.time_since_epoch().count())) { // '!' because 0 means pressed
             if (i < 4)
@@ -206,7 +206,7 @@ void artnet2dmx6_init_beforeloop() {
 
     // enable secondary 5V
     HAL_GPIO_WritePin(PWR_5V_EN_GPIO_GPIO_Port, PWR_5V_EN_GPIO_Pin, GPIO_PIN_SET);
-    Chrono::delay(Milliseconds(250));
+    Chrono::delay(Chrono::Milliseconds{250});
 
     eeprom_setup();
     config_setup();

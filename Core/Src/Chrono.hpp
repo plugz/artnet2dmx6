@@ -4,8 +4,13 @@
 #include <chrono>
 #include <cstdint>
 
-//#include "main.h"
 #include "tim.h"
+
+namespace Chrono {
+
+inline void init() {
+    HAL_TIM_Base_Start(&htim5);
+}
 
 using Milliseconds = std::chrono::duration<uint32_t, std::ratio<1, 1000>>;
 using Microseconds = std::chrono::duration<uint32_t, std::ratio<1, 1000000>>;
@@ -24,34 +29,7 @@ struct Clock
         while (now() - startPoint < d) {}
     }
 
-    static constexpr bool is_steady =             false;
-};
-
-using MsClock = Clock<Milliseconds>;
-using UsClock = Clock<Microseconds>;
-
-using MsTimePoint = MsClock::time_point;
-using UsTimePoint = UsClock::time_point;
-
-template<>
-inline MsTimePoint MsClock::now() {
-    return time_point(duration(HAL_GetTick()));
-}
-
-template<>
-inline UsTimePoint UsClock::now() {
-    return time_point(duration(__HAL_TIM_GET_COUNTER(&htim5)));
-}
-
-struct Chrono {
-    template<typename TDuration>
-    static inline void delay(TDuration const& duration) {
-        Clock<TDuration>::delay(duration);
-    }
-
-    static inline void init() {
-        HAL_TIM_Base_Start(&htim5);
-    }
+    static constexpr bool is_steady = false;
 };
 
 template<typename TClock>
@@ -98,7 +76,30 @@ public:
 
 };
 
+template<typename TDuration>
+inline void delay(TDuration const& duration) {
+    Clock<TDuration>::delay(duration);
+}
+
+using MsClock = Clock<Milliseconds>;
+using UsClock = Clock<Microseconds>;
+
+using MsTimePoint = MsClock::time_point;
+using UsTimePoint = UsClock::time_point;
+
 using MsTimer = Timer<MsClock>;
 using UsTimer = Timer<UsClock>;
+
+template<>
+inline MsTimePoint MsClock::now() {
+    return time_point(duration(HAL_GetTick()));
+}
+
+template<>
+inline UsTimePoint UsClock::now() {
+    return time_point(duration(__HAL_TIM_GET_COUNTER(&htim5)));
+}
+
+} // namespace Chrono
 
 #endif

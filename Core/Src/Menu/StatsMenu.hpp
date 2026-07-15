@@ -26,7 +26,7 @@ protected:
     virtual void _display() override;
 
 private:
-    MsTimer _refreshTimer{Milliseconds{REFRESH_PERIOD_MS}};
+    Chrono::MsTimer _refreshTimer{Chrono::Milliseconds{REFRESH_PERIOD_MS}};
 };
 
 } // namespace Menu

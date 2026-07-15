@@ -47,7 +47,7 @@ void LiquidCrystalI2C::init(I2C_HandleTypeDef* i2cHandle, uint8_t lcd_addr)
     _currentCmd = 0;
     _currentCmdStep = 0;
 
-    _i2cTimer.reset(Microseconds{0});
+    _i2cTimer.reset(Chrono::Microseconds{0});
 
 //    _writeIdx = COLS * ROWS;
 }
@@ -56,13 +56,11 @@ void LiquidCrystalI2C::begin() {
     // SEE PAGE 45/46 FOR INITIALIZATION SPECIFICATION!
     // according to datasheet, we need at least 40ms after power rises above 2.7V
     // before sending commands.
-    //delay(50);
-    HAL_Delay(50);
+    Chrono::delay(Chrono::Milliseconds{50});
 
     // Now we pull both RS and R/W low to begin commands
     _expanderWrite(_backlightval);    // reset expanderand turn backlight off (Bit 8 =1)
-    //delay(1000);
-    HAL_Delay(6); // wait min 4.1ms ?
+    Chrono::delay(Chrono::Microseconds{4200}); // wait min 4.1ms ?
 
     //put the LCD into 4 bit mode
     // this is according to the hitachi HD44780 datasheet
@@ -70,18 +68,15 @@ void LiquidCrystalI2C::begin() {
 
     // we start in 8bit mode, try to set 4 bit mode
     _write4bits(0x03 << 4);
-    //delayMicroseconds(4500); // wait min 4.1ms
-    HAL_Delay(6);
+    Chrono::delay(Chrono::Microseconds{4200}); // wait min 4.1ms ?
 
     // second try
     _write4bits(0x03 << 4);
-//    delayMicroseconds(4500); // wait min 4.1ms
-    HAL_Delay(6);
+    Chrono::delay(Chrono::Microseconds{4200}); // wait min 4.1ms ?
 
     // third go!
     _write4bits(0x03 << 4);
-//    delayMicroseconds(150);
-    HAL_Delay(2);
+    Chrono::delay(Chrono::Microseconds{160});
 
     // finally, set to 4-bit interface
     _write4bits(0x02 << 4);
@@ -95,15 +90,13 @@ void LiquidCrystalI2C::begin() {
 
     // clear it off
     _command(LCD_CLEARDISPLAY);// clear display, set cursor position to zero
-    //delayMicroseconds(2000);  // this command takes a long time!
-    HAL_Delay(3);
+    Chrono::delay(Chrono::Microseconds{2100});  // this command takes a long time!
 
     // set the entry mode
     _command(LCD_ENTRYMODESET | LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT);
 
     _command(LCD_RETURNHOME);  // set cursor position to zero
-    //delayMicroseconds(2000);  // this command takes a long time!
-    HAL_Delay(3);
+    Chrono::delay(Chrono::Microseconds{2100});  // this command takes a long time!
 }
 
 void LiquidCrystalI2C::setCursor(uint8_t col, uint8_t row, bool now){
@@ -210,22 +203,22 @@ void LiquidCrystalI2C::_sendCmd() {
 
     if (_currentCmdStep == 0) {
         // step 0 : send high val & enable pulse
-        if (!_i2cSend(highnib | En, Microseconds{2})) // pulse TIMER : 450ns
+        if (!_i2cSend(highnib | En, Chrono::Microseconds{2})) // pulse TIMER : 450ns
             return;
     }
     else if (_currentCmdStep == 1) {
         // step 2 : pulse end
-        if (!_i2cSend(highnib, Microseconds{38})) // TIMER : 37us
+        if (!_i2cSend(highnib, Chrono::Microseconds{38})) // TIMER : 37us
             return;
     }
     else if (_currentCmdStep == 2) {
         // step 3 : lownib val send & pulse
-        if (!_i2cSend(lownib | En, Microseconds{2}))
+        if (!_i2cSend(lownib | En, Chrono::Microseconds{2}))
             return;
     }
     else { // _currentCmdStep == 3
         // step 5 : nownib pulse end
-        if (!_i2cSend(lownib, Microseconds{38}))
+        if (!_i2cSend(lownib, Chrono::Microseconds{38}))
             return;
 
         _currentCmd = 0;
@@ -324,7 +317,7 @@ void LiquidCrystalI2C::_backlight() {
     _cmdQueue &= ~CMD_MASK(CMD_BACKLIGHT);
     _currentCmd = CMD_BACKLIGHT;
 
-    if (_i2cSend(_backlightval, Microseconds{0}))
+    if (_i2cSend(_backlightval, Chrono::Microseconds{0}))
         return;
 
     _currentCmd = 0;
@@ -379,15 +372,13 @@ void LiquidCrystalI2C::_expanderWrite(uint8_t _data){
 
 void LiquidCrystalI2C::_pulseEnable(uint8_t _data){
     _expanderWrite(_data | En);    // En high
-    //delayMicroseconds(1);        // enable pulse must be >450ns
-    HAL_Delay(2);
+    Chrono::delay(Chrono::Microseconds{2}); // enable pulse must be >450ns
 
     _expanderWrite(_data & ~En);    // En low
-    //delayMicroseconds(50);        // commands need > 37us to settle
-    HAL_Delay(2);
+    Chrono::delay(Chrono::Microseconds{40}); // commands need > 37us to settle
 }
 
-bool LiquidCrystalI2C::_i2cSend(uint8_t val, Microseconds delay) {
+bool LiquidCrystalI2C::_i2cSend(uint8_t val, Chrono::Microseconds delay) {
     if (!_i2cTimer.done())
         return false;
 
