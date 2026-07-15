@@ -17,8 +17,8 @@ void Button::updateStatus(bool pressed) {
 
     if (pressed) {
         (Menu::current()->*_cb)(Event::PRESS);
-        _pressTime = HAL_GetTick();
-        _prevSendRepeatTime = _pressTime;
+        _longPressTimer.reset();
+        _longPressRepeatTimer.reset();
     } else
         (Menu::current()->*_cb)(Event::RELEASE);
 }
@@ -27,24 +27,25 @@ void Button::tick() {
     if (!_pressed)
         return;
 
-    auto elapsedTime = pressTime();
-
-    if (elapsedTime > LONG_LONG_PRESS_TIME)
-        _sendRepeat(LONG_LONG_PRESS_PERIOD);
-    else if (elapsedTime > LONG_PRESS_TIME)
-        _sendRepeat(LONG_PRESS_PERIOD);
-}
-
-void Button::_sendRepeat(uint32_t period) {
-    auto now = HAL_GetTick();
-    if (now >= _prevSendRepeatTime + period) {
-        (Menu::current()->*_cb)(Event::REPEAT);
-        _prevSendRepeatTime += period * ((now - _prevSendRepeatTime) / period);
+    if (_longPressTimer.done(LONG_LONG_PRESS_TIME)) {
+        _sendRepeat(LONG_LONG_PRESS_REPEAT_PERIOD);
+    }
+    else if (_longPressTimer.done(LONG_PRESS_TIME)) {
+        _sendRepeat(LONG_PRESS_REPEAT_PERIOD);
     }
 }
 
-bool Button::pressed() const { return _pressed; }
+void Button::_sendRepeat(Milliseconds period) {
+    if (!_longPressRepeatTimer.done(period))
+        return;
 
-uint32_t Button::pressTime() const { return HAL_GetTick() - _pressTime; }
+    _longPressTimer.advance(period);
+    if (_longPressTimer.done()) // avoid firing at each loop
+        _longPressTimer.reset();
+
+    (Menu::current()->*_cb)(Event::REPEAT);
+}
+
+bool Button::pressed() const { return _pressed; }
 
 } // namespace Menu

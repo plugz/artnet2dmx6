@@ -47,6 +47,8 @@ void LiquidCrystalI2C::init(I2C_HandleTypeDef* i2cHandle, uint8_t lcd_addr)
     _currentCmd = 0;
     _currentCmdStep = 0;
 
+    _i2cTimer.reset(Microseconds{0});
+
 //    _writeIdx = COLS * ROWS;
 }
 
@@ -208,22 +210,22 @@ void LiquidCrystalI2C::_sendCmd() {
 
     if (_currentCmdStep == 0) {
         // step 0 : send high val & enable pulse
-        if (!_i2cSend(highnib | En, 2)) // pulse TIMER : 450ns
+        if (!_i2cSend(highnib | En, Microseconds{2})) // pulse TIMER : 450ns
             return;
     }
     else if (_currentCmdStep == 1) {
         // step 2 : pulse end
-        if (!_i2cSend(highnib, 2)) // TIMER : 37us
+        if (!_i2cSend(highnib, Microseconds{38})) // TIMER : 37us
             return;
     }
     else if (_currentCmdStep == 2) {
         // step 3 : lownib val send & pulse
-        if (!_i2cSend(lownib | En, 2))
+        if (!_i2cSend(lownib | En, Microseconds{2}))
             return;
     }
     else { // _currentCmdStep == 3
         // step 5 : nownib pulse end
-        if (!_i2cSend(lownib, 2)) // TIMER : 450ns
+        if (!_i2cSend(lownib, Microseconds{38}))
             return;
 
         _currentCmd = 0;
@@ -322,7 +324,7 @@ void LiquidCrystalI2C::_backlight() {
     _cmdQueue &= ~CMD_MASK(CMD_BACKLIGHT);
     _currentCmd = CMD_BACKLIGHT;
 
-    if (_i2cSend(_backlightval, 0))
+    if (_i2cSend(_backlightval, Microseconds{0}))
         return;
 
     _currentCmd = 0;
@@ -385,10 +387,11 @@ void LiquidCrystalI2C::_pulseEnable(uint8_t _data){
     HAL_Delay(2);
 }
 
-bool LiquidCrystalI2C::_i2cSend(uint8_t val, uint32_t delay) {
-    if (HAL_GetTick() < _prevI2cFinishTime)
+bool LiquidCrystalI2C::_i2cSend(uint8_t val, Microseconds delay) {
+    if (!_i2cTimer.done())
         return false;
+
     HAL_I2C_Master_Transmit(_i2cHandle, _addr, &val, 1, 1000);
-    _prevI2cFinishTime = HAL_GetTick() + delay;
+    _i2cTimer.reset(delay);
     return true;
 }

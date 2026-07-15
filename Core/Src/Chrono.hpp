@@ -42,6 +42,7 @@ template<typename TClock>
 class Timer {
 public:
     Timer(TClock::duration const& period) : _period(period) {}
+    Timer() : _period(0) {}
 
     void reset() {
         _startTime = TClock::now();
@@ -52,17 +53,28 @@ public:
         _period = newPeriod;
     };
 
+    void advance(TClock::duration const& period) {
+        _startTime += period;
+//        auto now = TClock::now();
+//        if (_startTime + period < now)
+//            _startTime = now;
+    }
+
     void advance() {
-        _startTime += _period;
+        advance(_period);
     }
 
     TClock::duration elapsedTime() {
         return TClock::now() - _startTime;
     }
 
-    bool done() {
+    bool done(TClock::duration const& period) {
         // handle overflow automagically thanks to unsigned arithmetic
-        return TClock::now() - _startTime >= _period;
+        return TClock::now() - _startTime >= period;
+    }
+
+    bool done() {
+        return done(_period);
     }
 
     TClock::duration _period;

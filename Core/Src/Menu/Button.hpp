@@ -1,6 +1,8 @@
 #ifndef __MENU_BUTTON_HPP__
 #define __MENU_BUTTON_HPP__
 
+#include "Chrono.hpp"
+
 #include <cstdint>
 
 namespace Menu {
@@ -18,11 +20,11 @@ public:
 public:
     using MenuCallback = void (Menu::*)(Event);
 
-    static constexpr uint32_t LONG_PRESS_TIME = 500;
-    static constexpr uint32_t LONG_LONG_PRESS_TIME = LONG_PRESS_TIME * 4;
+    static constexpr Milliseconds LONG_PRESS_TIME{500};
+    static constexpr Milliseconds LONG_LONG_PRESS_TIME{LONG_PRESS_TIME * 4};
 
-    static constexpr uint32_t LONG_PRESS_PERIOD = 50;
-    static constexpr uint32_t LONG_LONG_PRESS_PERIOD = 5;
+    static constexpr Milliseconds LONG_PRESS_REPEAT_PERIOD{50};
+    static constexpr Milliseconds LONG_LONG_PRESS_REPEAT_PERIOD{5};
 
 public:
     Button(MenuCallback cb);
@@ -32,14 +34,13 @@ public:
     void tick();
 
     bool pressed() const;
-    uint32_t pressTime() const;
 
 private:
-    void _sendRepeat(uint32_t period);
+    void _sendRepeat(Milliseconds period);
 
     bool _pressed;
-    uint32_t _pressTime;
-    uint32_t _prevSendRepeatTime;
+    MsTimer _longPressTimer;
+    MsTimer _longPressRepeatTimer;
     MenuCallback _cb;
 };
 

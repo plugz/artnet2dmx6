@@ -16,8 +16,6 @@
 
 #include <cstdio>
 
-static uint32_t currentTime;
-
 static M95640R eeprom;
 static Config config{&eeprom};
 
@@ -103,7 +101,7 @@ static void screen_tick() {
     //bool sentI2cOrSpi = false;
     //bool screenDone = false;
     screen.tick();
-    //screen.tick(&sentI2cOrSpi, &screenDone, currentTime);
+    //screen.tick(&sentI2cOrSpi, &screenDone);
 }
 
 //menu
@@ -150,8 +148,9 @@ static void buttons_setup() {
 
 static void buttons_tick() {
     unsigned int i = 0;
+    auto nowMs = MsClock::now();
     for (auto& button: buttons) {
-        if (button.update(!mcp.getCurrentValue(i), currentTime)) { // '!' because 0 means pressed
+        if (button.update(!mcp.getCurrentValue(i), nowMs.time_since_epoch().count())) { // '!' because 0 means pressed
             if (i < 4)
                 menuButtons[i].updateStatus(button.read());
         }
@@ -231,8 +230,6 @@ void artnet2dmx6_init_beforeloop() {
 }
 
 void artnet2dmx6_tick() {
-    currentTime = HAL_GetTick();
-
     eeprom_tick();
     config_tick();
 

@@ -1,6 +1,8 @@
 #ifndef __LIQUIDCRYSTALI2C_HPP__
 #define __LIQUIDCRYSTALI2C_HPP__
 
+#include "Chrono.hpp"
+
 #include "i2c.h"
 
 #include <cstdint>
@@ -122,7 +124,7 @@ private:
     void _write4bits(uint8_t);
     void _expanderWrite(uint8_t);
     void _pulseEnable(uint8_t);
-    bool _i2cSend(uint8_t val, uint32_t delay);
+    bool _i2cSend(uint8_t val, Microseconds delay);
 
     I2C_HandleTypeDef* _i2cHandle;
     uint8_t _addr;
@@ -172,7 +174,7 @@ private:
     uint8_t _moveCursorAfterRow;
     uint8_t _moveCursorAfterCol;
 
-    uint32_t _prevI2cFinishTime;
+    UsTimer _i2cTimer{Microseconds{0}};
 };
 
 #endif
