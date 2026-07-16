@@ -20,14 +20,14 @@ public:
 
     void setTransmitDone() { _transmitDone = true; }
 
-//    uint8_t* buffer() { return _fullBuffer + 1; }
-
 private:
     unsigned int _currentStep = 0;
     bool _transmitDone;
     Chrono::UsTimer _timer;
 
-    uint8_t _fullBuffer[513] = {0,};
+    ArtnetIn::Packet _buffers[2];
+    unsigned int _currentBufferIdx = 0; // currently sending out
+    unsigned int _nextBufferIdx = 1; // awaiting data
 
     uint8_t _lastHalCmdStatus = 0xff;
 };

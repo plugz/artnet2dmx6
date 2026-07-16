@@ -57,6 +57,10 @@ void DmxOut<TUart>::tick() {
     if (!_timer.done())
         return;
     if (_currentStep == 0) {
+        if (!_buffers[_nextBufferIdx])
+            return;
+        _currentBufferIdx = (_currentBufferIdx + 1) % std::size(_buffers);
+        _nextBufferIdx = (_nextBufferIdx + 1) % std::size(_buffers);
         _txPinBreakMode<TUart>();
         _timer.reset(BREAK_DELAY);
         ++_currentStep;
@@ -67,13 +71,16 @@ void DmxOut<TUart>::tick() {
         ++_currentStep;
     }
     else if (_currentStep == 2) {
-        _lastHalCmdStatus = HAL_UART_Transmit_DMA(UARTS[TUart - 1], _fullBuffer, sizeof(_fullBuffer));
+        uint8_t* data = _buffers[_currentBufferIdx].dmxData() - 1;
+        data[0] = 0;
+        _lastHalCmdStatus = HAL_UART_Transmit_DMA(UARTS[TUart - 1], data, _buffers[_currentBufferIdx].dmxDataSize() + 1);
         _transmitDone = false;
         ++_currentStep;
     }
     else if (_currentStep == 3) {
         if (!_transmitDone)
             return;
+        _buffers[_currentBufferIdx] = {};
         _timer.reset(AFTER_WRITE_DELAY);
         _currentStep = 0;
     }
@@ -81,7 +88,7 @@ void DmxOut<TUart>::tick() {
 
 template<int TUart>
 void DmxOut<TUart>::sendDmx(ArtnetIn::Packet const& dmxPacket) {
-    std::copy(dmxPacket.dmxData(), dmxPacket.dmxData() + dmxPacket.dmxDataSize(), _fullBuffer + 1);
+    _buffers[_nextBufferIdx] = dmxPacket;
 }
 
 // explicit instantiation

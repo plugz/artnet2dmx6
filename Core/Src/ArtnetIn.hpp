@@ -48,6 +48,7 @@ public:
     class Packet {
     public:
         Packet(std::shared_ptr<uint8_t*> const& data, uint16_t dataSize);
+        Packet();
 
         operator bool() const { return valid(); }
         bool valid() const { return _valid; }

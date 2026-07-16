@@ -29,6 +29,8 @@ ArtnetIn::Packet::Packet(std::shared_ptr<uint8_t*> const& data, uint16_t dataSiz
     _valid = true;
 }
 
+ArtnetIn::Packet::Packet() { _valid = false; }
+
 ArtnetIn::ArtnetIn() {}
 
 void ArtnetIn::init() {}
