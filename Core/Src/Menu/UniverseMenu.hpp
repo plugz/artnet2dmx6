@@ -1,5 +1,5 @@
-#ifndef __MENU_UNIVERSE_MENU_HPP__
-#define __MENU_UNIVERSE_MENU_HPP__
+#ifndef __MENU_UNIVERSEMENU_HPP__
+#define __MENU_UNIVERSEMENU_HPP__
 
 #include "GenericMenu.hpp"
 

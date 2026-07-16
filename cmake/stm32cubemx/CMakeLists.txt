@@ -62,6 +62,7 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../startup_stm32f407xx.s
 
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Artnet2Dmx6.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/ArtnetIn.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Chrono.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/DmxOut.cpp

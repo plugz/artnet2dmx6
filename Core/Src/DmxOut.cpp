@@ -44,6 +44,9 @@ template<int TUart>
 DmxOut<TUart>::DmxOut() {}
 
 template<int TUart>
+DmxOut<TUart>::~DmxOut() {}
+
+template<int TUart>
 void DmxOut<TUart>::init() {
     _currentStep = 0;
     _timer.reset(Chrono::Microseconds{0});
@@ -74,6 +77,11 @@ void DmxOut<TUart>::tick() {
         _timer.reset(AFTER_WRITE_DELAY);
         _currentStep = 0;
     }
+}
+
+template<int TUart>
+void DmxOut<TUart>::sendDmx(ArtnetIn::Packet const& dmxPacket) {
+    std::copy(dmxPacket.dmxData(), dmxPacket.dmxData() + dmxPacket.dmxDataSize(), _fullBuffer + 1);
 }
 
 // explicit instantiation

@@ -1,5 +1,5 @@
-#ifndef __MENU_CONTAINER_MENU_HPP__
-#define __MENU_CONTAINER_MENU_HPP__
+#ifndef __MENU_CONTAINERMENU_HPP__
+#define __MENU_CONTAINERMENU_HPP__
 
 #include "Menu.hpp"
 

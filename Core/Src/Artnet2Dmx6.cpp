@@ -1,5 +1,6 @@
 #include "artnet2dmx6.h"
 
+#include "ArtnetIn.hpp"
 #include "Chrono.hpp"
 #include "Config.hpp"
 #include "DmxOut.hpp"
@@ -17,6 +18,7 @@
 #include "usart.h"
 
 #include <cstdio>
+#include <memory>
 #include <tuple>
 
 static M95640R eeprom;
@@ -30,7 +32,8 @@ static ExternalBounce buttons[7];
 static Menu::Button menuButtons[4] = {{&Menu::Menu::up}, {&Menu::Menu::down}, {&Menu::Menu::left}, {&Menu::Menu::right}};
 
 static std::tuple<DmxOut<1>, DmxOut<2>, DmxOut<3>, DmxOut<4>, DmxOut<5>> dmxOuts;
-//static std::tuple<DmxOut<1>> dmxOuts;
+
+static ArtnetIn artnetIn;
 
 Stats a2d6Stats;
 
@@ -94,9 +97,6 @@ static void eeprom_setup() {
     eeprom.begin();
 }
 
-//Static void eeprom_reset() {
-//}
-
 static void eeprom_tick() {
 }
 
@@ -105,9 +105,6 @@ static void eeprom_tick() {
 static void config_setup() {
     config.setup({}, {});
 }
-
-//Static void config_reset() {
-//}
 
 static void config_tick() {
 }
@@ -126,9 +123,6 @@ static void screen_setup() {
 //    screen.print("0A2345    0B12345   ", true);
 }
 
-//static void screen_reset() {
-//}
-
 static void screen_tick() {
     //bool sentI2cOrSpi = false;
     //bool screenDone = false;
@@ -142,9 +136,6 @@ static void menu_setup() {
     mainMenu.enable();
 }
 
-//static void menu_reset() {
-//}
-
 static void menu_tick() {
     Menu::Menu::current()->tick();
 }
@@ -157,12 +148,6 @@ static void mcp_setup() {
     mcp.setup(SPI2_NSS2_GPIO_GPIO_Port, SPI2_NSS2_GPIO_Pin, &hspi2, 0x00);
 }
 
-//static void mcp_reset() {
-//    HAL_GPIO_WritePin(MCP_RESET_GPIO_GPIO_Port, MCP_RESET_GPIO_Pin, GPIO_PIN_RESET);
-//    Chrono::delay(Chrono::Microseconds{2}); // datasheet says 1us minimum reset pulse width
-//    mcp_setup();
-//}
-
 static void mcp_tick() {
     mcp.tick();
 }
@@ -174,9 +159,6 @@ static void buttons_setup() {
         button.setInterval(5);
     }
 }
-
-//static void buttons_reset() {
-//}
 
 static void buttons_tick() {
     unsigned int i = 0;
@@ -203,48 +185,92 @@ static void dmx_setup() {
     dmxTimer.reset();
 
     std::apply([&](auto&... dmxOut){(dmxOut.init(), ...);}, dmxOuts);
-//        std::get<0>(dmxOuts).init();
 }
 
-//static void dmx_reset() {
-//}
-
-static uint8_t buff[513] = {0,};
+// static uint8_t buff[513] = {0,};
 
 static void dmx_tick() {
 
     std::apply([&](auto&... dmxOut){(dmxOut.tick(), ...);}, dmxOuts);
-//        std::get<0>(dmxOuts).tick();
 
-    if (dmxTimer.done()) {
-        dmxTimer.reset(Chrono::Milliseconds{5});
+//    if (dmxTimer.done()) {
+//        dmxTimer.reset(Chrono::Milliseconds{5});
+//
+//        buff[0] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 40); // pan panfine tilt tiltfine
+//        buff[1] = 127;
+//        buff[2] = 127;
+//        buff[3] = 127;
+//        buff[5] = 50; // 0-127: dimmer, 128-255: strobe
+//        buff[6] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 40); // r g b w
+//        buff[7] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 60);
+//        buff[8] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 80);
+//        buff[9] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 90);
+//
+//        a2d6Stats.setCounter(2, buff[0]);
+//        a2d6Stats.increaseCounter(4);
+//
+//        std::apply([&](auto&... dmxOut){(std::copy(buff, buff + 12, dmxOut.buffer()), ...);}, dmxOuts);
+//    }
 
-        buff[0] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 40); // pan panfine tilt tiltfine
-        buff[1] = 127;
-        buff[2] = 127;
-        buff[3] = 127;
-        buff[5] = 50; // 0-127: dimmer, 128-255: strobe
-        buff[6] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 40); // r g b w
-        buff[7] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 60);
-        buff[8] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 80);
-        buff[9] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 90);
 
-        a2d6Stats.setCounter(2, buff[0]);
-        a2d6Stats.increaseCounter(4);
+}
 
-        std::apply([&](auto&... dmxOut){(std::copy(buff, buff + 12, dmxOut.buffer()), ...);}, dmxOuts);
-//        std::copy(buff, buff + 10, std::get<0>(dmxOuts).buffer());
+// artnet
+
+static void artnetin_dmx_cb(ArtnetIn::Packet const& packet) {
+    if (config.universe(0) == packet.dmxUniverse()) {
+        std::get<DmxOut<1>>(dmxOuts).sendDmx(packet);
     }
+    else if (config.universe(1) == packet.dmxUniverse()) {
+        std::get<DmxOut<2>>(dmxOuts).sendDmx(packet);
+    }
+    else if (config.universe(2) == packet.dmxUniverse()) {
+        std::get<DmxOut<3>>(dmxOuts).sendDmx(packet);
+    }
+    else if (config.universe(3) == packet.dmxUniverse()) {
+        std::get<DmxOut<4>>(dmxOuts).sendDmx(packet);
+    }
+    else if (config.universe(4) == packet.dmxUniverse()) {
+        std::get<DmxOut<5>>(dmxOuts).sendDmx(packet);
+    }
+}
 
+static void pbufFree(uint8_t** pbufPayload) {
+    pbuf_free((pbuf*)(((uint8_t*)pbufPayload) - offsetof(pbuf, payload)));
+}
 
+static void udp_receive_callback(
+        void *arg,
+        struct udp_pcb *pcb,
+        struct pbuf *p,
+        const ip_addr_t *addr,
+        u16_t port) {
+
+    a2d6Stats.increaseCounter(3);
+
+    std::shared_ptr<uint8_t*> pbufPtr{(uint8_t**)&(p->payload), pbufFree};
+
+    artnetIn.handlePacket(pbufPtr, p->len);
+}
+
+static void artnetin_setup() {
+    MX_LWIP_Init();
+
+    udp = udp_new();
+    udp_bind(udp, IP_ADDR_ANY, ArtnetIn::PORT);
+    udp_recv(udp, udp_receive_callback, nullptr);
+
+    artnetIn.init();
+    artnetIn.setPacketCallback(ARTNET_DMX, artnetin_dmx_cb);
+}
+
+static void artnetin_tick() {
+    MX_LWIP_Process();
 }
 
 // stats
 static void stats_setup() {
 }
-
-//static void stats_reset() {
-//}
 
 static void stats_tick() {
     a2d6Stats.tick();
@@ -266,18 +292,6 @@ void artnet2dmx6_init_sysinit() {
 //    extern void initialise_monitor_handles(void);
 //}
 
-static void udp_receive_callback(
-        void *arg,
-        struct udp_pcb *pcb,
-        struct pbuf *p,
-        const ip_addr_t *addr,
-        u16_t port) {
-    a2d6Stats.increaseCounter(3);
-
-    pbuf_free(p);
-}
-
-
 void artnet2dmx6_init_beforeloop() {
     Chrono::init();
 
@@ -296,13 +310,9 @@ void artnet2dmx6_init_beforeloop() {
 
     dmx_setup();
 
+    artnetin_setup();
+
     stats_setup();
-
-    MX_LWIP_Init();
-
-    udp = udp_new();
-    udp_bind(udp, IP_ADDR_ANY, 4455);
-    udp_recv(udp, udp_receive_callback, nullptr);
 
     msTimer.reset();
     usTimer.reset();
@@ -323,9 +333,9 @@ void artnet2dmx6_tick() {
 
     dmx_tick();
 
-    stats_tick();
+    artnetin_tick();
 
-    MX_LWIP_Process();
+    stats_tick();
 
     if (msTimer.done()) {
         msTimer.advance();

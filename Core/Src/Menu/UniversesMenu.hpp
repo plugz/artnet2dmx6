@@ -1,5 +1,5 @@
-#ifndef __MENU_UNIVERSES_MENU_HPP__
-#define __MENU_UNIVERSES_MENU_HPP__
+#ifndef __MENU_UNIVERSESMENU_HPP__
+#define __MENU_UNIVERSESMENU_HPP__
 
 #include "ContainerMenu.hpp"
 #include "UniverseMenu.hpp"
