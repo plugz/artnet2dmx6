@@ -13,6 +13,7 @@
 #include "lwip.h"
 #include "spi.h"
 #include "udp.h"
+#include "usart.h"
 
 #include <cstdio>
 
@@ -162,6 +163,55 @@ static void buttons_tick() {
     }
 }
 
+// dmx
+
+static Chrono::MsTimer dmxTimer{Chrono::Milliseconds{200}};
+
+static void dmx_setup() {
+    dmxTimer.reset();
+}
+
+//static void dmx_reset() {
+//}
+
+static uint8_t buff[513];
+
+static void dmx_tick() {
+    if (!dmxTimer.done())
+        return;
+
+    std::fill(buff, buff + 513, 0);
+
+    buff[0] = 0; // null start code
+    buff[1] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 20); // pan panfine tilt tiltfine
+    buff[2] = 127;
+    buff[3] = 127;
+    buff[4] = 127;
+    buff[6] = 126; // dimmer
+    buff[7] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 20); // r g b w
+    buff[8] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 40);
+    buff[9] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 50);
+    buff[10] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 70);
+
+    a2d6Stats.setCounter(2, buff[1]);
+
+    GPIOA->MODER = (GPIOA->MODER & ~GPIO_MODER_MODER9_Msk) | (1 << GPIO_MODER_MODER9_Pos);
+    Chrono::delay(Chrono::Microseconds{92});
+    GPIOA->MODER = (GPIOA->MODER & ~GPIO_MODER_MODER9_Msk) | (2 << GPIO_MODER_MODER9_Pos);
+    Chrono::delay(Chrono::Microseconds{12});
+
+    HAL_UART_Transmit(&huart1, buff, 513, 200);
+
+    GPIOC->MODER = (GPIOC->MODER & ~GPIO_MODER_MODER10_Msk) | (1 << GPIO_MODER_MODER10_Pos);
+    Chrono::delay(Chrono::Microseconds{92});
+    GPIOC->MODER = (GPIOC->MODER & ~GPIO_MODER_MODER10_Msk) | (2 << GPIO_MODER_MODER10_Pos);
+    Chrono::delay(Chrono::Microseconds{12});
+
+    HAL_UART_Transmit(&huart4, buff, 513, 200);
+
+    dmxTimer.reset(Chrono::Milliseconds{4});
+}
+
 // stats
 static void stats_setup() {
 }
@@ -217,6 +267,8 @@ void artnet2dmx6_init_beforeloop() {
     mcp_setup();
     buttons_setup();
 
+    dmx_setup();
+
     stats_setup();
 
     MX_LWIP_Init();
@@ -227,6 +279,7 @@ void artnet2dmx6_init_beforeloop() {
 
     msTimer.reset();
     usTimer.reset();
+
 
  //   initialise_monitor_handles();
 }
@@ -240,6 +293,8 @@ void artnet2dmx6_tick() {
 
     mcp_tick();
     buttons_tick();
+
+    dmx_tick();
 
     stats_tick();
 
