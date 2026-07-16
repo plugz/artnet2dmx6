@@ -50,6 +50,7 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../USB_DEVICE/App/usbd_cdc_if.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/main.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/gpio.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/dma.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/i2c.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/spi.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/tim.c
@@ -63,6 +64,7 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Artnet2Dmx6.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Chrono.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/DmxOut.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/ExternalBounce.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/InputOutputMCPSPI.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/LiquidCrystalI2C.cpp

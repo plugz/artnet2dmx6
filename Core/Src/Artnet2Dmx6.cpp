@@ -2,6 +2,7 @@
 
 #include "Chrono.hpp"
 #include "Config.hpp"
+#include "DmxOut.hpp"
 #include "ExternalBounce.hpp"
 #include "InputOutputMCPSPI.hpp"
 #include "LiquidCrystalI2C.hpp"
@@ -16,6 +17,7 @@
 #include "usart.h"
 
 #include <cstdio>
+#include <tuple>
 
 static M95640R eeprom;
 static Config config{&eeprom};
@@ -26,6 +28,9 @@ static Menu::MainMenu mainMenu{{&screen, &config}};
 static InputOutputMCPSPI mcp;
 static ExternalBounce buttons[7];
 static Menu::Button menuButtons[4] = {{&Menu::Menu::up}, {&Menu::Menu::down}, {&Menu::Menu::left}, {&Menu::Menu::right}};
+
+static std::tuple<DmxOut<1>, DmxOut<2>, DmxOut<3>, DmxOut<4>, DmxOut<5>> dmxOuts;
+//static std::tuple<DmxOut<1>> dmxOuts;
 
 Stats a2d6Stats;
 
@@ -165,51 +170,66 @@ static void buttons_tick() {
 
 // dmx
 
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
+    a2d6Stats.increaseCounter(5);
+    if (huart == &huart1) {
+        std::get<DmxOut<1>>(dmxOuts).transmitDone();
+    }
+    else if (huart == &huart2) {
+        std::get<DmxOut<2>>(dmxOuts).transmitDone();
+    }
+    else if (huart == &huart3) {
+        std::get<DmxOut<3>>(dmxOuts).transmitDone();
+    }
+    else if (huart == &huart4) {
+        std::get<DmxOut<4>>(dmxOuts).transmitDone();
+    }
+    else { // (huart == &huart5)
+        std::get<DmxOut<5>>(dmxOuts).transmitDone();
+    }
+}
+
+// TODO this is for debug only
 static Chrono::MsTimer dmxTimer{Chrono::Milliseconds{200}};
 
 static void dmx_setup() {
     dmxTimer.reset();
+
+    std::apply([&](auto&... dmxOut){(dmxOut.init(), ...);}, dmxOuts);
+//        std::get<0>(dmxOuts).init();
 }
 
 //static void dmx_reset() {
 //}
 
-static uint8_t buff[513];
+static uint8_t buff[513] = {0,};
 
 static void dmx_tick() {
-    if (!dmxTimer.done())
-        return;
 
-    std::fill(buff, buff + 513, 0);
+    std::apply([&](auto&... dmxOut){(dmxOut.tick(), ...);}, dmxOuts);
+//        std::get<0>(dmxOuts).tick();
 
-    buff[0] = 0; // null start code
-    buff[1] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 20); // pan panfine tilt tiltfine
-    buff[2] = 127;
-    buff[3] = 127;
-    buff[4] = 127;
-    buff[6] = 126; // dimmer
-    buff[7] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 20); // r g b w
-    buff[8] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 40);
-    buff[9] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 50);
-    buff[10] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 70);
+    if (dmxTimer.done()) {
+        dmxTimer.reset(Chrono::Milliseconds{5});
 
-    a2d6Stats.setCounter(2, buff[1]);
+        buff[0] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 40); // pan panfine tilt tiltfine
+        buff[1] = 127;
+        buff[2] = 127;
+        buff[3] = 127;
+        buff[5] = 50; // 0-127: dimmer, 128-255: strobe
+        buff[6] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 40); // r g b w
+        buff[7] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 60);
+        buff[8] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 80);
+        buff[9] = (uint8_t)(Chrono::MsClock::now().time_since_epoch().count() / 90);
 
-    GPIOA->MODER = (GPIOA->MODER & ~GPIO_MODER_MODER9_Msk) | (1 << GPIO_MODER_MODER9_Pos);
-    Chrono::delay(Chrono::Microseconds{92});
-    GPIOA->MODER = (GPIOA->MODER & ~GPIO_MODER_MODER9_Msk) | (2 << GPIO_MODER_MODER9_Pos);
-    Chrono::delay(Chrono::Microseconds{12});
+        a2d6Stats.setCounter(2, buff[0]);
+        a2d6Stats.increaseCounter(4);
 
-    HAL_UART_Transmit(&huart1, buff, 513, 200);
+        std::apply([&](auto&... dmxOut){(std::copy(buff, buff + 12, dmxOut.buffer()), ...);}, dmxOuts);
+//        std::copy(buff, buff + 10, std::get<0>(dmxOuts).buffer());
+    }
 
-    GPIOC->MODER = (GPIOC->MODER & ~GPIO_MODER_MODER10_Msk) | (1 << GPIO_MODER_MODER10_Pos);
-    Chrono::delay(Chrono::Microseconds{92});
-    GPIOC->MODER = (GPIOC->MODER & ~GPIO_MODER_MODER10_Msk) | (2 << GPIO_MODER_MODER10_Pos);
-    Chrono::delay(Chrono::Microseconds{12});
 
-    HAL_UART_Transmit(&huart4, buff, 513, 200);
-
-    dmxTimer.reset(Chrono::Milliseconds{4});
 }
 
 // stats
