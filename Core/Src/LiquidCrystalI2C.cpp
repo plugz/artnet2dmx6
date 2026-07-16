@@ -317,7 +317,7 @@ void LiquidCrystalI2C::_backlight() {
     _cmdQueue &= ~CMD_MASK(CMD_BACKLIGHT);
     _currentCmd = CMD_BACKLIGHT;
 
-    if (_i2cSend(_backlightval, Chrono::Microseconds{0}))
+    if (!_i2cSend(_backlightval, Chrono::Microseconds{0}))
         return;
 
     _currentCmd = 0;
@@ -379,10 +379,12 @@ void LiquidCrystalI2C::_pulseEnable(uint8_t _data){
 }
 
 bool LiquidCrystalI2C::_i2cSend(uint8_t val, Chrono::Microseconds delay) {
-    if (!_i2cTimer.done())
+    if (!(_transmitDone && _i2cTimer.done()))
         return false;
 
-    HAL_I2C_Master_Transmit(_i2cHandle, _addr, &val, 1, 1000);
+    _transmitDone = false;
+    _i2cByte = val;
+    HAL_I2C_Master_Transmit_IT(_i2cHandle, _addr, &_i2cByte, 1);
     _i2cTimer.reset(delay);
     return true;
 }

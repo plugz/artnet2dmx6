@@ -14,7 +14,7 @@ public:
 
     void tick();
 
-    void transmitDone() { _transmitDone = true; }
+    void setTransmitDone() { _transmitDone = true; }
 
     uint8_t* buffer() { return _fullBuffer + 1; }
 
@@ -23,9 +23,9 @@ private:
     bool _transmitDone;
     Chrono::UsTimer _timer;
 
-    uint8_t _status = 0xff;
-
     uint8_t _fullBuffer[513];
+
+    uint8_t _lastHalCmdStatus = 0xff;
 };
 
 #endif

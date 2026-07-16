@@ -38,7 +38,6 @@ static constexpr UART_HandleTypeDef* UARTS[5] = {&huart1, &huart2, &huart3, &hua
 
 static constexpr Chrono::Microseconds BREAK_DELAY{92};
 static constexpr Chrono::Microseconds AFTER_BREAK_DELAY{12};
-static constexpr Chrono::Microseconds DELAMERDE{50000};
 static constexpr Chrono::Microseconds AFTER_WRITE_DELAY{4000};
 
 template<int TUart>
@@ -65,14 +64,12 @@ void DmxOut<TUart>::tick() {
         ++_currentStep;
     }
     else if (_currentStep == 2) {
-        _status = HAL_UART_Transmit_DMA(UARTS[TUart - 1], _fullBuffer, sizeof(_fullBuffer));
+        _lastHalCmdStatus = HAL_UART_Transmit_DMA(UARTS[TUart - 1], _fullBuffer, sizeof(_fullBuffer));
         _transmitDone = false;
         ++_currentStep;
-
-//        _timer.reset(DELAMERDE); // XXX de la merde
     }
     else if (_currentStep == 3) {
-        if (!_transmitDone) // XXX de la merde
+        if (!_transmitDone)
             return;
         _timer.reset(AFTER_WRITE_DELAY);
         _currentStep = 0;

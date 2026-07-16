@@ -107,6 +107,8 @@ public:
     // return true when no command in queue
     bool ready() const;
 
+    void setTransmitDone() { _transmitDone = true; }
+
     void tick();
 
 private:
@@ -175,6 +177,8 @@ private:
     uint8_t _moveCursorAfterCol;
 
     Chrono::UsTimer _i2cTimer{Chrono::Microseconds{0}};
+    bool _transmitDone = true;
+    uint8_t _i2cByte;
 };
 
 #endif

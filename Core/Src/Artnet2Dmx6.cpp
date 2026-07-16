@@ -53,6 +53,32 @@ udp_pcb* udp;
 //  return len;
 //}
 
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *I2cHandle)
+{
+    (void)I2cHandle;
+    screen.setTransmitDone();
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
+    a2d6Stats.increaseCounter(5);
+    if (huart == &huart1) {
+        std::get<DmxOut<1>>(dmxOuts).setTransmitDone();
+    }
+    else if (huart == &huart2) {
+        std::get<DmxOut<2>>(dmxOuts).setTransmitDone();
+    }
+    else if (huart == &huart3) {
+        std::get<DmxOut<3>>(dmxOuts).setTransmitDone();
+    }
+    else if (huart == &huart4) {
+        std::get<DmxOut<4>>(dmxOuts).setTransmitDone();
+    }
+    else { // (huart == &huart5)
+        std::get<DmxOut<5>>(dmxOuts).setTransmitDone();
+    }
+}
+
+
 // CPP part
 
 // eeprom
@@ -169,25 +195,6 @@ static void buttons_tick() {
 }
 
 // dmx
-
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
-    a2d6Stats.increaseCounter(5);
-    if (huart == &huart1) {
-        std::get<DmxOut<1>>(dmxOuts).transmitDone();
-    }
-    else if (huart == &huart2) {
-        std::get<DmxOut<2>>(dmxOuts).transmitDone();
-    }
-    else if (huart == &huart3) {
-        std::get<DmxOut<3>>(dmxOuts).transmitDone();
-    }
-    else if (huart == &huart4) {
-        std::get<DmxOut<4>>(dmxOuts).transmitDone();
-    }
-    else { // (huart == &huart5)
-        std::get<DmxOut<5>>(dmxOuts).transmitDone();
-    }
-}
 
 // TODO this is for debug only
 static Chrono::MsTimer dmxTimer{Chrono::Milliseconds{200}};
