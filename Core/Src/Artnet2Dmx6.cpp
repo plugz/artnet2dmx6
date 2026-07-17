@@ -42,6 +42,8 @@ static Chrono::UsTimer usTimer(Chrono::Microseconds{1500000});
 
 udp_pcb* udp;
 
+extern netif gnetif;
+
 // C part
 
 void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *I2cHandle)
@@ -90,8 +92,12 @@ static void eeprom_tick() {
 
 // config
 
+static void artnetin_reset();
+
 static void config_setup() {
-    config.setup({}, {});
+    config.setup(
+            [&](uint32_t, uint8_t){artnetin_reset();},
+            {});
 }
 
 static void config_tick() {
@@ -211,6 +217,34 @@ static void artnetin_setup() {
 
     artnetIn.init();
     artnetIn.setPacketCallback(ARTNET_DMX, artnetin_dmx_cb);
+}
+
+static void artnetin_reset() {
+    udp_remove(udp);
+
+    netif_set_down(&gnetif);
+
+    {
+        ip4_addr_t ipaddr;
+        ip4_addr_t netmask;
+        ip4_addr_t gw;
+
+        uint32_t const cfgIp = config.ip();
+        uint32_t const cfgSubnet = config.subnet();
+        uint32_t const subnetMask = (cfgSubnet ? ~(uint64_t(1 << (32 - cfgSubnet)) - 1) : 0);
+
+        IP4_ADDR(&ipaddr, uint8_t(cfgIp >> 24), uint8_t(cfgIp >> 16), uint8_t(cfgIp >> 8), uint8_t(cfgIp));
+        IP4_ADDR(&netmask, uint8_t(subnetMask >> 24), uint8_t(subnetMask >> 16), uint8_t(subnetMask >> 8), uint8_t(subnetMask));
+        IP4_ADDR(&gw, 0, 0, 0, 0);
+
+        netif_set_addr(&gnetif, &ipaddr, &netmask, &gw);
+    }
+
+    netif_set_up(&gnetif);
+
+    udp = udp_new();
+    udp_bind(udp, IP_ADDR_ANY, ArtnetIn::PORT);
+    udp_recv(udp, udp_receive_callback, nullptr);
 }
 
 static void artnetin_tick() {
