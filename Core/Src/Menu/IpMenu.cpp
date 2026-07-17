@@ -72,7 +72,6 @@ void IpMenu::_enable() {
     _ipParts[3] = (ip >> 0) & 0xff;
 
     _subnet = _common.config->subnet();
-    _subnet = 8;
 
     _editIdx = 0;
     _common.screen->setCursorDisplay(true);
