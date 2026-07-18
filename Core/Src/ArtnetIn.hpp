@@ -40,36 +40,13 @@ static constexpr uint16_t ARTNET_TRIGGER =           0x9900;
 static constexpr uint16_t ARTNET_DIRECTORY =         0x9a00;
 static constexpr uint16_t ARTNET_DIRECTORYREPLY =    0x9b00;
 
+class Packet;
+
 class ArtnetIn {
 public:
     static constexpr uint16_t PORT = 0x1936;
 
 public:
-    class Packet {
-    public:
-        Packet(std::shared_ptr<uint8_t*> const& data, uint16_t dataSize);
-        Packet();
-
-        operator bool() const { return valid(); }
-        bool valid() const { return _valid; }
-        uint8_t* data() const { return _data; }
-        uint16_t dataSize() const { return _dataSize; }
-
-        uint16_t code() const { return _code; }
-
-        uint8_t* dmxData() const { return _data + 18; }
-        uint16_t dmxDataSize() const { return _dataSize - 18; }
-        uint16_t dmxUniverse() const { return _dmxUniverse; }
-
-    private:
-        std::shared_ptr<uint8_t*> _dataContainer; // we keep this here so it is freed when not needed anymore
-        uint8_t* _data;
-        uint16_t _dataSize;
-        uint16_t _code;
-        uint16_t _dmxUniverse;
-        bool _valid;
-    };
-
     using PacketCallback = void (*)(Packet const&);
 
 public:

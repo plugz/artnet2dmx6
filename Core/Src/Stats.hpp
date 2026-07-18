@@ -11,7 +11,7 @@ public:
 
     inline uint32_t tickCount() const { return _tickCount; }
 
-    void increaseCounter(int idx) { ++_counters[idx]; }
+    void incrementCounter(int idx) { ++_counters[idx]; }
     void setCounter(int idx, uint32_t val) { _counters[idx] = val; }
     uint32_t counter(int idx) { return _counters[idx]; }
 

@@ -65,12 +65,14 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/ArtnetIn.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Chrono.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/DmxIn.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/DmxOut.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/ExternalBounce.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/InputOutputMCPSPI.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/LiquidCrystalI2C.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/M95640R.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/MCP23S17.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Packet.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Stats.cpp
 
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/Button.cpp

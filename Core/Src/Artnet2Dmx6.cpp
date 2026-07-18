@@ -3,6 +3,7 @@
 #include "ArtnetIn.hpp"
 #include "Chrono.hpp"
 #include "Config.hpp"
+#include "DmxIn.hpp"
 #include "DmxOut.hpp"
 #include "ExternalBounce.hpp"
 #include "InputOutputMCPSPI.hpp"
@@ -32,13 +33,11 @@ static ExternalBounce buttons[7];
 static Menu::Button menuButtons[4] = {{&Menu::Menu::up}, {&Menu::Menu::down}, {&Menu::Menu::left}, {&Menu::Menu::right}};
 
 static std::tuple<DmxOut<1>, DmxOut<2>, DmxOut<3>, DmxOut<4>, DmxOut<5>> dmxOuts;
+static DmxIn dmxIn;
 
 static ArtnetIn artnetIn;
 
 Stats a2d6Stats;
-
-static Chrono::MsTimer msTimer{Chrono::Milliseconds{1500}};
-static Chrono::UsTimer usTimer(Chrono::Microseconds{1500000});
 
 udp_pcb* udp;
 
@@ -53,7 +52,6 @@ void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *I2cHandle)
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
-    a2d6Stats.increaseCounter(5);
     if (huart == &huart1) {
         std::get<DmxOut<1>>(dmxOuts).setTransmitDone();
     }
@@ -160,19 +158,28 @@ static void buttons_tick() {
     }
 }
 
-// dmx
+// dmxout
 
-static void dmx_setup() {
+static void dmxout_setup() {
     std::apply([&](auto&... dmxOut){(dmxOut.init(), ...);}, dmxOuts);
 }
 
-static void dmx_tick() {
+static void dmxout_tick() {
     std::apply([&](auto&... dmxOut){(dmxOut.tick(), ...);}, dmxOuts);
+}
+
+// dmxin
+static void dmxin_setup() {
+    dmxIn.init(nullptr);
+}
+
+static void dmxin_tick() {
+    dmxIn.tick();
 }
 
 // artnet
 
-static void artnetin_dmx_cb(ArtnetIn::Packet const& packet) {
+static void artnetin_dmx_cb(Packet const& packet) {
     if (config.universe(0) == packet.dmxUniverse()) {
         std::get<DmxOut<1>>(dmxOuts).sendDmx(packet);
     }
@@ -200,8 +207,6 @@ static void udp_receive_callback(
         struct pbuf *p,
         const ip_addr_t *addr,
         u16_t port) {
-
-    a2d6Stats.increaseCounter(3);
 
     std::shared_ptr<uint8_t*> pbufPtr{(uint8_t**)&(p->payload), pbufFree};
 
@@ -287,14 +292,12 @@ void artnet2dmx6_init_beforeloop() {
     mcp_setup();
     buttons_setup();
 
-    dmx_setup();
+    dmxout_setup();
+    dmxin_setup();
 
     artnetin_setup();
 
     stats_setup();
-
-    msTimer.reset();
-    usTimer.reset();
 }
 
 void artnet2dmx6_tick() {
@@ -307,20 +310,12 @@ void artnet2dmx6_tick() {
     mcp_tick();
     buttons_tick();
 
-    dmx_tick();
+    dmxout_tick();
+    dmxin_tick();
 
     artnetin_tick();
 
     stats_tick();
-
-    if (msTimer.done()) {
-        msTimer.advance();
-        a2d6Stats.increaseCounter(0);
-    }
-    if (usTimer.done()) {
-        usTimer.advance();
-        a2d6Stats.increaseCounter(1);
-    }
 }
 
 //lwip

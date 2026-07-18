@@ -38,7 +38,7 @@ template<> inline void _txPinTxMode<4>() { TXPIN_TXMODE(UART4_TXBANK, UART4_TXPI
 template<> inline void _txPinTxMode<5>() { TXPIN_TXMODE(UART5_TXBANK, UART5_TXPIN); }
 template<> inline void _txPinTxMode<6>() { TXPIN_TXMODE(UART6_TXBANK, UART6_TXPIN); }
 
-static constexpr UART_HandleTypeDef* UARTS[5] = {&huart1, &huart2, &huart3, &huart4, &huart5};
+static constexpr UART_HandleTypeDef* UARTS[6] = {&huart1, &huart2, &huart3, &huart4, &huart5, &huart6};
 
 static constexpr Chrono::Microseconds BREAK_DELAY{92};
 static constexpr Chrono::Microseconds AFTER_BREAK_DELAY{12};
@@ -91,7 +91,7 @@ void DmxOut<TUart>::tick() {
 }
 
 template<int TUart>
-void DmxOut<TUart>::sendDmx(ArtnetIn::Packet const& dmxPacket) {
+void DmxOut<TUart>::sendDmx(Packet const& dmxPacket) {
     _buffers[_nextBufferIdx] = dmxPacket;
 }
 

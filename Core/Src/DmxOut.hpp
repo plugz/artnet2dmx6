@@ -1,8 +1,8 @@
 #ifndef __DMXOUT_HPP__
 #define __DMXOUT_HPP__
 
-#include "ArtnetIn.hpp"
 #include "Chrono.hpp"
+#include "Packet.hpp"
 
 #include <cstdint>
 
@@ -16,7 +16,7 @@ public:
 
     void tick();
 
-    void sendDmx(ArtnetIn::Packet const& dmxPacket);
+    void sendDmx(Packet const& dmxPacket);
 
     void setTransmitDone() { _transmitDone = true; }
 
@@ -25,7 +25,7 @@ private:
     bool _transmitDone;
     Chrono::UsTimer _timer;
 
-    ArtnetIn::Packet _buffers[2];
+    Packet _buffers[2];
     unsigned int _currentBufferIdx = 0; // currently sending out
     unsigned int _nextBufferIdx = 1; // awaiting data
 

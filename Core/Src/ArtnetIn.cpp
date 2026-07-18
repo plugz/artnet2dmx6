@@ -1,35 +1,6 @@
 #include "ArtnetIn.hpp"
 
-#include <cstring>
-
-static constexpr char const ARTNET_CODE_STR[] = "Art-Net";
-
-ArtnetIn::Packet::Packet(std::shared_ptr<uint8_t*> const& data, uint16_t dataSize) {
-    _dataContainer = data;
-    _data = *_dataContainer;
-    _dataSize = dataSize;
-    _valid = false;
-
-    if (dataSize < 12)
-        return;
-
-    if (std::memcmp(ARTNET_CODE_STR, _data, sizeof(ARTNET_CODE_STR)))
-        return;
-
-    // little endian in artnet packet
-    _code = (uint16_t(_data[9]) << 8) | uint16_t(_data[8]);
-
-    switch (_code) {
-    case ARTNET_DMX: {
-        if (_dataSize < 20)
-            return; // invalid
-        _dmxUniverse = (uint16_t(_data[15]) << 8) | uint16_t(_data[14]); // little endian in artnet packet
-    } break;
-    }
-    _valid = true;
-}
-
-ArtnetIn::Packet::Packet() { _valid = false; }
+#include "Packet.hpp"
 
 ArtnetIn::ArtnetIn() {}
 
@@ -52,7 +23,7 @@ void ArtnetIn::setPacketCallback(uint16_t type, PacketCallback cb) {
 }
 
 void ArtnetIn::handlePacket(std::shared_ptr<uint8_t*> const& data, uint16_t dataSize) {
-    Packet newPacket{data, dataSize};
+    Packet newPacket{data, dataSize, true};
     if (!newPacket)
         return;
 
