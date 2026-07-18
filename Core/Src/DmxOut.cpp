@@ -18,6 +18,8 @@
 #define UART4_TXPIN  10
 #define UART5_TXBANK C
 #define UART5_TXPIN  12
+#define UART6_TXBANK C
+#define UART6_TXPIN  6
 
 template<int TUart> static inline void _txPinBreakMode();
 template<int TUart> static inline void _txPinTxMode();
@@ -27,12 +29,14 @@ template<> inline void _txPinBreakMode<2>() { TXPIN_BREAKMODE(UART2_TXBANK, UART
 template<> inline void _txPinBreakMode<3>() { TXPIN_BREAKMODE(UART3_TXBANK, UART3_TXPIN); }
 template<> inline void _txPinBreakMode<4>() { TXPIN_BREAKMODE(UART4_TXBANK, UART4_TXPIN); }
 template<> inline void _txPinBreakMode<5>() { TXPIN_BREAKMODE(UART5_TXBANK, UART5_TXPIN); }
+template<> inline void _txPinBreakMode<6>() { TXPIN_BREAKMODE(UART6_TXBANK, UART6_TXPIN); }
 
 template<> inline void _txPinTxMode<1>() { TXPIN_TXMODE(UART1_TXBANK, UART1_TXPIN); }
 template<> inline void _txPinTxMode<2>() { TXPIN_TXMODE(UART2_TXBANK, UART2_TXPIN); }
 template<> inline void _txPinTxMode<3>() { TXPIN_TXMODE(UART3_TXBANK, UART3_TXPIN); }
 template<> inline void _txPinTxMode<4>() { TXPIN_TXMODE(UART4_TXBANK, UART4_TXPIN); }
 template<> inline void _txPinTxMode<5>() { TXPIN_TXMODE(UART5_TXBANK, UART5_TXPIN); }
+template<> inline void _txPinTxMode<6>() { TXPIN_TXMODE(UART6_TXBANK, UART6_TXPIN); }
 
 static constexpr UART_HandleTypeDef* UARTS[5] = {&huart1, &huart2, &huart3, &huart4, &huart5};
 
