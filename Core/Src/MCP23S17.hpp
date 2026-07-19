@@ -58,7 +58,7 @@ A2,A1,A0 tied to ground = 0x20
 #ifndef __MCP23S17_HPP__
 #define __MCP23S17_HPP__
 
-#include "gpio.h"
+#include "Pin.hpp"
 
 #include <cstdint>
 
@@ -68,8 +68,12 @@ static constexpr uint8_t MCP23S17_IODIRA =   0x00;
 static constexpr uint8_t MCP23S17_IODIRB =   0x01;
 static constexpr uint8_t MCP23S17_IPOL =     0x02;
 static constexpr uint8_t MCP23S17_GPINTEN =  0x04;
+static constexpr uint8_t MCP23S17_GPINTENA = 0x04;
+static constexpr uint8_t MCP23S17_GPINTENB = 0x05;
 static constexpr uint8_t MCP23S17_DEFVAL =   0x06;
 static constexpr uint8_t MCP23S17_INTCON =   0x08;
+static constexpr uint8_t MCP23S17_INTCONA =  0x08;
+static constexpr uint8_t MCP23S17_INTCONB =  0x09;
 static constexpr uint8_t MCP23S17_IOCON =    0x0A;
 static constexpr uint8_t MCP23S17_GPPU =     0x0C;
 static constexpr uint8_t MCP23S17_GPPUA =    0x0C;
@@ -117,7 +121,7 @@ public:
     MCP23S17();//For include inside other libraries
 
     // haenAddr is 0-7
-    void             setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTypeDef* spiHandle, uint8_t haenAddr);//used with other libraries only
+    void             setup(Pin const& csPin, SPI_HandleTypeDef* spiHandle, uint8_t haenAddr);//used with other libraries only
 
     void             begin();
 
@@ -138,6 +142,8 @@ public:
     void             setPullup(uint16_t data);                        // HIGH=all pullup, LOW=all pulldown,0xxxx=you choose witch
     void             setPullupPortA(bool pullup);
     void             setPullupPortB(bool pullup);
+    void             setInterruptOnChangePortA(bool enable);
+    void             setInterruptOnChangePortB(bool enable);
 
     void             gpioUpdate();
     void             gpioUpdatePortA();
@@ -147,12 +153,12 @@ protected:
 
 
     inline void _GPIOstartSend(void) {
-        HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(_csPin.port, _csPin.pin, GPIO_PIN_RESET);
     }
 
 
     inline void _GPIOendSend(void) {
-        HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(_csPin.port, _csPin.pin, GPIO_PIN_SET);
     }
 
     inline uint8_t _gpioReadByte(uint8_t addr) {
@@ -216,8 +222,7 @@ protected:
 
 
 private:
-    GPIO_TypeDef*      _csPinPeripheral;
-    uint16_t           _csPin;
+    Pin                _csPin;
     SPI_HandleTypeDef* _spiHandle;
     uint8_t            _addr;
 

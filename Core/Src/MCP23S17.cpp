@@ -4,13 +4,12 @@
 
 #include <initializer_list>
 
-static uint8_t s_haenEnabledCSPins[256] = {0,};
+static uint8_t s_haenEnabledCSPins[32] = {0,};
 
 MCP23S17::MCP23S17(){
 }
 
-void MCP23S17::setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTypeDef* spiHandle, uint8_t haenAddr){
-    _csPinPeripheral = csPinPeripheral;
+void MCP23S17::setup(Pin const& csPin, SPI_HandleTypeDef* spiHandle, uint8_t haenAddr){
     _csPin = csPin;
     _spiHandle = spiHandle;
     if (haenAddr > 7)
@@ -21,10 +20,10 @@ void MCP23S17::setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTy
 }
 
 void MCP23S17::begin() {
-    HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(_csPin.port, _csPin.pin, GPIO_PIN_SET);
     Chrono::delay(Chrono::Microseconds{2}); // Datasheet says 100ns CS disable time
 
-    if (!s_haenEnabledCSPins[_csPin])
+    if (!s_haenEnabledCSPins[_csPin.pin])
     {
         // See https://www.electro-tech-online.com/threads/how-to-init-multiple-mcp23s17.126668/
         // -> Send message to set IOCON.HAEN (0bxxxxXxxx) to 1
@@ -35,13 +34,13 @@ void MCP23S17::begin() {
         for (uint8_t tempAddr : {0, 4})
         {
             MCP23S17 temp;
-            temp.setup(_csPinPeripheral, _csPin, _spiHandle, tempAddr);
+            temp.setup(_csPin, _spiHandle, tempAddr);
             // BANK MIRROR SEQOP DISSLW HAEN ODR INTPOL -NC-
             // 0    0      1     0      1    0   0      0
             temp._gpioWriteByte(MCP23S17_IOCON, 0b00101000);
         }
 
-        s_haenEnabledCSPins[_csPin] = true;
+        s_haenEnabledCSPins[_csPin.pin] = true;
     }
     _gpioDirection = 0xFFFF; //all in
     _gpioState = 0xFFFF; //all low
@@ -132,6 +131,26 @@ void MCP23S17::setPullupPortB(bool pullup) {
     else {
         _gpioState &= 0xff00;
         _gpioWriteByte(MCP23S17_GPPUB, 0x00);
+    }
+}
+
+void MCP23S17::setInterruptOnChangePortA(bool enable) {
+    if (enable) {
+        _gpioWriteByte(MCP23S17_GPINTENA, 0xff);
+        _gpioWriteByte(MCP23S17_INTCONA, 0x00);
+    }
+    else {
+        _gpioWriteByte(MCP23S17_GPINTENA, 0x00);
+    }
+}
+
+void MCP23S17::setInterruptOnChangePortB(bool enable) {
+    if (enable) {
+        _gpioWriteByte(MCP23S17_GPINTENB, 0xff);
+        _gpioWriteByte(MCP23S17_INTCONB, 0x00);
+    }
+    else {
+        _gpioWriteByte(MCP23S17_GPINTENB, 0x00);
     }
 }
 

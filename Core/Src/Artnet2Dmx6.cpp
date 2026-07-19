@@ -127,7 +127,8 @@ static void menu_tick() {
 static void mcp_setup() {
     HAL_GPIO_WritePin(MCP_RESET_GPIO_GPIO_Port, MCP_RESET_GPIO_Pin, GPIO_PIN_SET);
     // Chrono::delay(Chrono::Microseconds{0}); // datasheet says 0ns from resetHIGH to ready
-    mcp.setup(SPI2_NSS2_GPIO_GPIO_Port, SPI2_NSS2_GPIO_Pin, &hspi2, 0x00);
+    mcp.setup(Pin{SPI2_NSS2_GPIO_GPIO_Port, SPI2_NSS2_GPIO_Pin}, &hspi2, 0x00);
+    mcp.setInterruptPin(Pin{MCP_INTA_GPIO_GPIO_Port, MCP_INTA_GPIO_Pin});
 }
 
 static void mcp_tick() {

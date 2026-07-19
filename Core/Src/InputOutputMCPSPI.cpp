@@ -4,8 +4,8 @@
 
 #include "spi.h"
 
-void InputOutputMCPSPI::setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI_HandleTypeDef* spiHandle, uint8_t haenAddr) {
-    MCP23S17::setup(csPinPeripheral, csPin, spiHandle, haenAddr);
+void InputOutputMCPSPI::setup(Pin const& csPin, SPI_HandleTypeDef* spiHandle, uint8_t haenAddr) {
+    MCP23S17::setup(csPin, spiHandle, haenAddr);
     MCP23S17::begin();
     setPullupPortA(true); // enable pullup on port A
     gpioPinModePortB(false); // enable output mode on port B
@@ -15,12 +15,21 @@ void InputOutputMCPSPI::setup(GPIO_TypeDef* csPinPeripheral, uint16_t csPin, SPI
     write();
 }
 
+void InputOutputMCPSPI::setInterruptPin(Pin const& pin) {
+    setInterruptOnChangePortA(true);
+    _interruptPin = pin;
+}
+
 void InputOutputMCPSPI::tick() {
     if (_needWrite) {
         write();
         return;
     }
-    read();
+    else {
+        if (_interruptPin.port && HAL_GPIO_ReadPin(_interruptPin.port, _interruptPin.pin))
+            return;
+        read();
+    }
 }
 
 void InputOutputMCPSPI::read() {
