@@ -20,6 +20,8 @@ void artnet2dmx6_tick();
 // uint8_t[4], uint8_t[4], uint8_t[4]
 void artnet2dmx6_lwip_init_bfor(uint8_t* ip, uint8_t* mask, uint8_t* gateway);
 
+void artnet2dmx6_usart6_irq_handle();
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

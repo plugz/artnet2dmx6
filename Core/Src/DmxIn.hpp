@@ -23,6 +23,8 @@ public:
 
     inline void tick() { (this->*_currentStep)(); }
 
+    void setReceiveDone();
+
 private:
     void _waitForBreak();
     void _waitForBreakEnd();
@@ -39,6 +41,7 @@ private:
     PacketCallback _callback = nullptr;
 
     Step _currentStep = &DmxIn::_waitForBreak;
+    bool _receiveDone;
 
     Chrono::UsTimer _timer;
 };

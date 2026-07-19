@@ -37,6 +37,14 @@ void DmxIn::init(PacketCallback cb) {
     _callback = cb;
 }
 
+void DmxIn::setReceiveDone() {
+//    a2d6Stats.setCounter(3, _buffers[_currentBufferIdx][18]);
+//    a2d6Stats.setCounter(4, _buffers[_currentBufferIdx][19]);
+//    a2d6Stats.setCounter(5, _buffers[_currentBufferIdx][20]);
+
+    _receiveDone = true;
+}
+
 void DmxIn::_waitForBreak() {
     //auto val = HAL_GPIO_ReadPin(BANK(UART6_RXBANK), PIN(UART6_RXPIN));
     auto val = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7);
@@ -62,23 +70,36 @@ void DmxIn::_waitForBreakEnd() {
 }
 
 void DmxIn::_afterBreak() {
+    auto val = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7);
+    if (val == GPIO_PIN_SET)
+        return;
+
     if (!_timer.done())
         return;
 
-    auto result = HAL_UART_Receive_DMA(&huart6, _buffers[_currentBufferIdx].data() + 17, 513, 200);
-    if (result == HAL_OK)
-        a2d6Stats.incrementCounter(0);
-    else
-        a2d6Stats.incrementCounter(1);
-
-    a2d6Stats.setCounter(2, _buffers[_currentBufferIdx][18]);
-    a2d6Stats.setCounter(3, _buffers[_currentBufferIdx][19]);
-    a2d6Stats.setCounter(4, _buffers[_currentBufferIdx][20]);
-    a2d6Stats.setCounter(5, _buffers[_currentBufferIdx][21]);
+    _receiveDone = false;
+    _currentByteIdx = 0;
+    if (HAL_UART_Receive_IT(&huart6, _buffers[_currentBufferIdx].data() + 17, 1) != HAL_OK)
+        return;
 
     _currentStep = &DmxIn::_readData;
 }
 
 void DmxIn::_readData() {
-    _currentStep = &DmxIn::_waitForBreak;
+    if (!_receiveDone)
+        return;
+
+    ++_currentByteIdx;
+    if (_currentByteIdx == 513)
+    {
+//        a2d6Stats.incrementCounter(5);
+        _currentStep = &DmxIn::_waitForBreak;
+        return;
+    }
+
+    auto ret = HAL_UART_Receive_IT(&huart6, _buffers[_currentBufferIdx].data() + 17 + _currentByteIdx, 1);
+    if (ret != HAL_OK) {
+        _timer.reset(Chrono::Microseconds(12));
+        return;
+    }
 }
