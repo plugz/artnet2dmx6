@@ -40,6 +40,8 @@
 
 #include "M95640R.hpp"
 
+#include <algorithm>
+
 /* Defines -------------------------------------------------------------------*/
 
 /* Class Implementation ------------------------------------------------------*/
@@ -142,35 +144,45 @@ void M95640R::EepromRead(uint16_t nAddress, uint8_t cNbBytes, uint8_t* pcBuffer)
 * @param  pcBuffer pointer to the data to be written
 * @retval None
 */
-void M95640R::EepromWrite(uint16_t nAddress, uint8_t cNbBytes, uint8_t* pcBuffer)
+void M95640R::EepromWrite(uint16_t address, uint8_t totalByteCount, uint8_t* buffer)
 {
-  uint8_t cmd = EEPROM_CMD_WRITE;
-  uint8_t address[2];
+    uint8_t cmd;
+    uint8_t addressBuff[2];
+    uint8_t transmitByteCount;
 
-  /* Wait the end of a previous write operation */
-  EepromWaitEndWriteOperation();
+    do {
 
-  /* SET the WREN flag */
-  EepromWriteEnable();
+        /* Wait the end of a previous write operation */
+        EepromWaitEndWriteOperation();
 
-  for(uint8_t k=0; k<2; k++) {
-    address[k] = (uint8_t)(nAddress>>((1-k)*8));
-  }
+        /* SET the WREN flag */
+        EepromWriteEnable();
 
-  /* Put the SPI chip select low to start the transaction */
-  HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_RESET);
+        cmd = EEPROM_CMD_WRITE;
+        addressBuff[0] = uint8_t(address >> 8);
+        addressBuff[1] = uint8_t(address);
+        transmitByteCount = std::min(totalByteCount, uint8_t(32));
 
-  /* Write the header bytes and read the SPIRIT status bytes */
-  HAL_SPI_TransmitReceive(_spiHandle, &cmd, &cmd, sizeof(cmd), HAL_MAX_DELAY);
+        /* Put the SPI chip select low to start the transaction */
+        HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_RESET);
 
-  HAL_SPI_TransmitReceive(_spiHandle, address, address, sizeof(address), HAL_MAX_DELAY);
+        /* Write the header bytes and read the SPIRIT status bytes */
+        HAL_SPI_TransmitReceive(_spiHandle, &cmd, &cmd, sizeof(cmd), HAL_MAX_DELAY);
 
-  HAL_SPI_Transmit(_spiHandle, pcBuffer, cNbBytes, HAL_MAX_DELAY);
+        HAL_SPI_TransmitReceive(_spiHandle, addressBuff, addressBuff, sizeof(addressBuff), HAL_MAX_DELAY);
 
-  /* Put the SPI chip select high to end the transaction */
-  HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_SET);
+        HAL_SPI_Transmit(_spiHandle, buffer, transmitByteCount, HAL_MAX_DELAY);
 
-  return;
+        /* Put the SPI chip select high to end the transaction */
+        HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_SET);
+
+        address += 32;
+        buffer += 32;
+        totalByteCount -= transmitByteCount;
+
+    } while (totalByteCount);
+
+    return;
 }
 
 /**

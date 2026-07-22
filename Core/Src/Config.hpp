@@ -60,7 +60,7 @@ private:
 
 private:
     M95640R* _eeprom;
-    Conf _conf;
+    volatile Conf _conf;
     NetworkCallback _networkCallback;
     DmxOutCallback _dmxOutCallback;
     ArtnetOutCallback _artnetOutCallback;
