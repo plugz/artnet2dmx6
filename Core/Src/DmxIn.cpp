@@ -1,35 +1,11 @@
 #include "DmxIn.hpp"
 
-#include "Stats.hpp"
+#include "Packet.hpp"
 
-#include "usart.h"
-
-extern Stats a2d6Stats;
-
-#define _RXPIN_CHANGE(BANK, PIN, POS) (GPIO##BANK->MODER = (GPIO##BANK->MODER & ~GPIO_MODER_MODER##PIN##_Msk) | (POS << GPIO_MODER_MODER##PIN##_Pos))
-
-// usage example : RXPIN_BREAKMODE(A, 9)
-#define RXPIN_BREAKMODE(BANK, PIN) _RXPIN_CHANGE(BANK, PIN, 0)
-#define RXPIN_TXMODE(BANK, PIN) _RXPIN_CHANGE(BANK, PIN, 2)
-
-#define BANK(LETTER) (GPIO##LETTER)
-#define PIN(NUMBER) (GPIO_PIN_##NUMBER)
-
-#define UART1_RXBANK A
-#define UART1_RXPIN  10
-#define UART2_RXBANK D
-#define UART2_RXPIN  6
-#define UART3_RXBANK D
-#define UART3_RXPIN  9
-#define UART4_RXBANK C
-#define UART4_RXPIN  11
-#define UART5_RXBANK D
-#define UART5_RXPIN  2
-#define UART6_RXBANK C
-#define UART6_RXPIN  7
-
-
-DmxIn::DmxIn() {}
+DmxIn::DmxIn() {
+    _bufferPtrs[0] = _buffers[0].data();
+    _bufferPtrs[1] = _buffers[1].data();
+}
 
 DmxIn::~DmxIn() {}
 
@@ -37,69 +13,18 @@ void DmxIn::init(PacketCallback cb) {
     _callback = cb;
 }
 
-void DmxIn::setReceiveDone() {
-//    a2d6Stats.setCounter(3, _buffers[_currentBufferIdx][18]);
-//    a2d6Stats.setCounter(4, _buffers[_currentBufferIdx][19]);
-//    a2d6Stats.setCounter(5, _buffers[_currentBufferIdx][20]);
+static void freeNothing(void*) {}
 
-    _receiveDone = true;
-}
-
-void DmxIn::_waitForBreak() {
-    //auto val = HAL_GPIO_ReadPin(BANK(UART6_RXBANK), PIN(UART6_RXPIN));
-    auto val = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7);
-    if (val == GPIO_PIN_SET)
+void DmxIn::tick() {
+    if (!_mustSendBytes)
         return;
 
-    _timer.reset(Chrono::Microseconds(70)); // dont wait the full 88 us
-    _currentStep = &DmxIn::_waitForBreakEnd;
-}
+    unsigned int packetToSendBufferIdx = (_currentBufferIdx + 1) % 2;
 
-void DmxIn::_waitForBreakEnd() {
-    auto val = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7);
-    if (val == GPIO_PIN_RESET)
-        return;
-
-    if (!_timer.done()) {
-        _currentStep = &DmxIn::_waitForBreak;
-        return;
+    if (_callback) {
+        Packet p{std::shared_ptr<uint8_t*>{&_bufferPtrs[packetToSendBufferIdx], freeNothing}, uint16_t(_mustSendBytes + 17), false};
+        _callback(p);
     }
 
-    _timer.reset(Chrono::Microseconds(7));
-    _currentStep = &DmxIn::_afterBreak;
-}
-
-void DmxIn::_afterBreak() {
-    auto val = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7);
-    if (val == GPIO_PIN_SET)
-        return;
-
-    if (!_timer.done())
-        return;
-
-    _receiveDone = false;
-    _currentByteIdx = 0;
-    if (HAL_UART_Receive_IT(&huart6, _buffers[_currentBufferIdx].data() + 17, 1) != HAL_OK)
-        return;
-
-    _currentStep = &DmxIn::_readData;
-}
-
-void DmxIn::_readData() {
-    if (!_receiveDone)
-        return;
-
-    ++_currentByteIdx;
-    if (_currentByteIdx == 513)
-    {
-//        a2d6Stats.incrementCounter(5);
-        _currentStep = &DmxIn::_waitForBreak;
-        return;
-    }
-
-    auto ret = HAL_UART_Receive_IT(&huart6, _buffers[_currentBufferIdx].data() + 17 + _currentByteIdx, 1);
-    if (ret != HAL_OK) {
-        _timer.reset(Chrono::Microseconds(12));
-        return;
-    }
+    _mustSendBytes = 0;
 }

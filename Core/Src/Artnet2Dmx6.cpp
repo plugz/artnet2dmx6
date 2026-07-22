@@ -72,174 +72,32 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 //    }
 }
 
-static uint8_t dmxBuff[513 + 18];
-static uint8_t* dmxBuffPtr = dmxBuff;
-static uint8_t** dmxBuffPtrPtr = &dmxBuffPtr;
-static uint16_t dmxIdx = 0;
-static bool dataDone = false;
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-    (void)huart;
-    //    dmxIn.setReceiveDone();
-
-    //            a2d6Stats.incrementCounter(0);
-
-                //a2d6Stats.incrementCounter(0);
-    if (huart->ErrorCode) {
-        //        if (huart->ErrorCode & HAL_UART_ERROR_PE) { // Parity error
-        //            a2d6Stats.incrementCounter(1);
-        //        }
-        //        if (huart->ErrorCode & HAL_UART_ERROR_NE) { // Noise error
-        //            a2d6Stats.incrementCounter(2);
-        //        }
-        // Frame error
-        if (huart->ErrorCode & HAL_UART_ERROR_FE) {
-            if (dmxIdx > 10) {
-                //a2d6Stats.incrementCounter(1);
-                uint16_t counterIdx = 0;
-                for (uint16_t i = 0; i < dmxIdx && counterIdx < 6; ++i) {
-                    if (dmxBuff[i] > 0) {
-                        a2d6Stats.setCounter(counterIdx++, i);
-                        a2d6Stats.setCounter(counterIdx++, dmxBuff[i]);
-                    }
-                }
-                if (counterIdx == 0) {
-                    a2d6Stats.setCounter(0, dmxIdx);
-                }
-                //a2d6Stats.setCounter(0, dmxBuff[6] + 10);
-                //a2d6Stats.setCounter(1, dmxBuff[7] + 10);
-                //a2d6Stats.setCounter(2, dmxBuff[8] + 10);
-                //a2d6Stats.setCounter(3, dmxBuff[9] + 10);
-                //a2d6Stats.setCounter(4, dmxBuff[10] + 10);
-                //a2d6Stats.setCounter(5, dmxBuff[11] + 10);
-            }
-            else {
-                //a2d6Stats.incrementCounter(2);
-                a2d6Stats.setCounter(0, 1000);
-                a2d6Stats.setCounter(1, 1000);
-                a2d6Stats.setCounter(2, 1000);
-                a2d6Stats.setCounter(3, 1000);
-                a2d6Stats.setCounter(4, 1000);
-                a2d6Stats.setCounter(5, 1000);
-            }
-        }
-        // Overrun error
-        if (huart->ErrorCode & HAL_UART_ERROR_ORE) {
-            //a2d6Stats.incrementCounter(3);
-            a2d6Stats.setCounter(0, 1001);
-            a2d6Stats.setCounter(1, 1001);
-            a2d6Stats.setCounter(2, 1001);
-            a2d6Stats.setCounter(3, 1001);
-            a2d6Stats.setCounter(4, 1001);
-            a2d6Stats.setCounter(5, 1001);
-        }
-        if (huart->ErrorCode & HAL_UART_ERROR_DMA) {
-            //a2d6Stats.incrementCounter(4);
-            a2d6Stats.setCounter(0, 1002);
-            a2d6Stats.setCounter(1, 1002);
-            a2d6Stats.setCounter(2, 1002);
-            a2d6Stats.setCounter(3, 1002);
-            a2d6Stats.setCounter(4, 1002);
-            a2d6Stats.setCounter(5, 1002);
-        }
-        dmxIdx = 0;
-    }
-    else {
-        //a2d6Stats.incrementCounter(5);
-        ++dmxIdx;
-    }
-
-
-//    __HAL_UART_FLUSH_DRREGISTER(&huart6);
-    HAL_UART_Receive_IT(&huart6, dmxBuff + dmxIdx, 1);
-}
-
+// dmxIn
 
 void artnet2dmx6_usart6_irq_handle() {
-    uint32_t StatusRead = huart6.Instance->SR;
-    uint32_t Data = huart6.Instance->DR;
-
-    //a2d6Stats.incrementCounter(0);
+    uint32_t status = huart6.Instance->SR;
+    uint32_t data = huart6.Instance->DR;
 
     /* Frame Error interrupt happens after 10 bits of 0 (~40us), so it is
      * after first 40 us of Break */
-    if ((StatusRead & UART_FLAG_FE) == UART_FLAG_FE) {
+    if ((status & UART_FLAG_FE) == UART_FLAG_FE) {
         __HAL_UART_CLEAR_FEFLAG(&huart6);
-        //a2d6Stats.incrementCounter(1);
-        //a2d6Stats.setCounter(2, a2d6Stats.counter(0) / a2d6Stats.counter(1));
 
+        dmxIn.handleBreak();
 
-        //if (dmxIdx > 10) {
-        //    for (unsigned int i = 0; i < 6; ++i) {
-        //        a2d6Stats.setCounter(i, dmxBuff[i + 1]);
-        //    }
-        //    //a2d6Stats.incrementCounter(1);
-        //    //uint16_t counterIdx = 0;
-        //    //for (uint16_t i = 0; i < dmxIdx && counterIdx < 6; ++i) {
-        //    //    if (dmxBuff[i] > 0) {
-        //    //        a2d6Stats.setCounter(counterIdx++, i);
-        //    //        a2d6Stats.setCounter(counterIdx++, dmxBuff[i]);
-        //    //    }
-        //    //}
-        //}
-
-        dmxIdx = 0;
         return;
     }
 
     /* Receive Data interrupt */
-    if ((StatusRead & UART_FLAG_RXNE) == UART_FLAG_RXNE) {
+    if ((status & UART_FLAG_RXNE) == UART_FLAG_RXNE) {
         //a2d6Stats.incrementCounter(3);
         __HAL_UART_CLEAR_FLAG(&huart6, UART_FLAG_RXNE);
 
-        dmxBuff[17 + dmxIdx++] = Data;
-        if (dmxIdx == 513) {
-            dataDone = true;
-            dmxIdx = 0;
-        }
+        dmxIn.handleByte(data);
+
+        return;
     }
 }
-
-
-//void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart) {
-////    a2d6Stats.incrementCounter(1);
-////    dmxIn.setReceiveDone();
-// //   HAL_UART_Receive_IT(&huart6, &toto, 1);
-//}
-
-//void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
-////    a2d6Stats.incrementCounter(2);
-//
-////    a2d6Stats.incrementCounter(0);
-//    if (huart->ErrorCode & HAL_UART_ERROR_PE) { // Parity error
-//        a2d6Stats.incrementCounter(1);
-//        __HAL_UART_CLEAR_FLAG(huart, UART_FLAG_PE);
-//    }
-//    if (huart->ErrorCode & HAL_UART_ERROR_NE) { // Noise error
-//        a2d6Stats.incrementCounter(2);
-//        __HAL_UART_CLEAR_FLAG(huart, UART_FLAG_NE);
-//    }
-//    if (huart->ErrorCode & HAL_UART_ERROR_FE) { // Frame error
-//        a2d6Stats.incrementCounter(3);
-//        __HAL_UART_CLEAR_FLAG(huart, UART_FLAG_FE);
-//    }
-//    if (huart->ErrorCode & HAL_UART_ERROR_ORE) { // Overrun error
-//        a2d6Stats.incrementCounter(4);
-//        __HAL_UART_CLEAR_FLAG(huart, UART_FLAG_ORE);
-//    }
-////    if (huart->ErrorCode & HAL_UART_ERROR_DMA) { // DMA transfer error
-////        a2d6Stats.incrementCounter(5);
-////        __HAL_UART_CLEAR_FLAG(huart, UART_FLAG_DMA);
-////    }
-////    dmxIn.setReceiveDone();
-//
-//
-////    if (HAL_UART_Receive_IT(&huart6, &toto, 1) != HAL_OK)
-////        a2d6Stats.incrementCounter(5);
-//
-//    huart->ErrorCode = 0;
-//}
-
 
 // CPP part
 
@@ -265,7 +123,8 @@ static void artnetin_reset();
 
 static void config_setup() {
     config.setup(
-            [&](uint32_t, uint8_t){artnetin_reset();},
+            [&](uint32_t ip, uint8_t subnet){(void)ip; (void)subnet; artnetin_reset();},
+            {},
             {});
 }
 
@@ -342,39 +201,48 @@ static void dmxout_tick() {
 
 // dmxin
 
-
-static void dmxin_setup() {
-    dmxIn.init(nullptr);
+static void dmxin_packet_cb(Packet const& packet) {
+    if (config.dmxOutInputDmx(0)) {
+        std::get<DmxOut<1>>(dmxOuts).sendDmx(packet);
+    }
+    if (config.dmxOutInputDmx(1)) {
+        std::get<DmxOut<2>>(dmxOuts).sendDmx(packet);
+    }
+    if (config.dmxOutInputDmx(2)) {
+        std::get<DmxOut<3>>(dmxOuts).sendDmx(packet);
+    }
+    if (config.dmxOutInputDmx(3)) {
+        std::get<DmxOut<4>>(dmxOuts).sendDmx(packet);
+    }
+    if (config.dmxOutInputDmx(4)) {
+        std::get<DmxOut<5>>(dmxOuts).sendDmx(packet);
+    }
 }
 
-static void freeNothing(void*) {}
+static void dmxin_setup() {
+    dmxIn.init(dmxin_packet_cb);
+}
 
 static void dmxin_tick() {
-//    dmxIn.tick();
-    if (!dataDone)
-        return;
-    dataDone = false;
-
-    Packet p{std::shared_ptr<uint8_t*>{dmxBuffPtrPtr, freeNothing}, sizeof(dmxBuff), false};
-    std::apply([&](auto&... dmxOut){(dmxOut.sendDmx(p), ...);}, dmxOuts);
+    dmxIn.tick();
 }
 
 // artnet
 
 static void artnetin_dmx_cb(Packet const& packet) {
-    if (config.universe(0) == packet.dmxUniverse()) {
+    if ((!config.dmxOutInputDmx(0)) && (config.dmxOutInputUniverse(0) == packet.dmxUniverse())) {
         std::get<DmxOut<1>>(dmxOuts).sendDmx(packet);
     }
-    else if (config.universe(1) == packet.dmxUniverse()) {
+    if ((!config.dmxOutInputDmx(1)) && (config.dmxOutInputUniverse(1) == packet.dmxUniverse())) {
         std::get<DmxOut<2>>(dmxOuts).sendDmx(packet);
     }
-    else if (config.universe(2) == packet.dmxUniverse()) {
+    if ((!config.dmxOutInputDmx(2)) && (config.dmxOutInputUniverse(2) == packet.dmxUniverse())) {
         std::get<DmxOut<3>>(dmxOuts).sendDmx(packet);
     }
-    else if (config.universe(3) == packet.dmxUniverse()) {
+    if ((!config.dmxOutInputDmx(3)) && (config.dmxOutInputUniverse(3) == packet.dmxUniverse())) {
         std::get<DmxOut<4>>(dmxOuts).sendDmx(packet);
     }
-    else if (config.universe(4) == packet.dmxUniverse()) {
+    if ((!config.dmxOutInputDmx(4)) && (config.dmxOutInputUniverse(4) == packet.dmxUniverse())) {
         std::get<DmxOut<5>>(dmxOuts).sendDmx(packet);
     }
 }
@@ -475,13 +343,12 @@ void artnet2dmx6_init_beforeloop() {
     buttons_setup();
 
     dmxout_setup();
-//    dmxin_setup();
+    dmxin_setup();
 
     artnetin_setup();
 
     stats_setup();
 
-///    HAL_UART_RxCpltCallback(&huart6);
     __HAL_UART_ENABLE_IT(&huart6, UART_IT_RXNE);
     __HAL_UART_ENABLE_IT(&huart6, UART_IT_ERR);
 }

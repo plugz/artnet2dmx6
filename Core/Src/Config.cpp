@@ -5,23 +5,13 @@
 Config::Config(M95640R* eeprom) : _eeprom(eeprom) {
 }
 
-void Config::setup(NetworkCallback const& networkCallback, UniverseCallback const& universeCallback) {
+void Config::setup(NetworkCallback const& networkCallback, DmxOutCallback const& dmxOutCallback, ArtnetOutCallback const& artnetOutCallback) {
     _networkCallback = networkCallback;
-    _universeCallback = universeCallback;
+    _dmxOutCallback = dmxOutCallback;
+    _artnetOutCallback = artnetOutCallback;
     _loadConfig();
 }
 
-uint32_t Config::ip() const {
-    return _conf.ip;
-}
-
-uint8_t Config::subnet() const {
-    return _conf.subnet;
-}
-
-uint16_t Config::universe(uint8_t idx) const {
-    return _conf.universes[idx];
-}
 
 void Config::setNetwork(uint32_t ip, uint8_t subnet) {
     _conf.ip = ip;
@@ -33,12 +23,32 @@ void Config::setNetwork(uint32_t ip, uint8_t subnet) {
     }
 }
 
-void Config::setUniverse(uint8_t idx, uint16_t universe) {
-    _conf.universes[idx] = universe;
+void Config::setDmxOutInputDmx(uint8_t idx, bool inputDmx) {
+    _conf.dmxOuts[idx].inputDmx = inputDmx;
+    _writeConfig();
+}
+
+void Config::setDmxOutInputUniverse(uint8_t idx, uint16_t universe) {
+    _conf.dmxOuts[idx].inputArtnetUniverse = universe;
     _writeConfig();
 
-    if (_universeCallback) {
-        _universeCallback(idx, universe);
+    if (_dmxOutCallback) {
+        _dmxOutCallback(idx, universe);
+    }
+}
+
+void Config::setArtnetOutEnable(bool enable) {
+    _conf.artnetOut.enable = enable;
+    _writeConfig();
+}
+
+void Config::setArtnetOutTargetIp(bool manual, uint32_t targetIp) {
+    _conf.artnetOut.manualTargetIp = manual;
+    _conf.artnetOut.targetIp = targetIp;
+    _writeConfig();
+
+    if (_artnetOutCallback) {
+        _artnetOutCallback(manual, targetIp);
     }
 }
 
