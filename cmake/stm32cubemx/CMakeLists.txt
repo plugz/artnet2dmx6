@@ -76,6 +76,9 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Stats.cpp
 
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/Button.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/DmxOutInputMenu.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/DmxOutMenu.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/DmxOutsMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/GenericMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/IpMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/MainMenu.cpp
@@ -83,7 +86,6 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/ScreenOffMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/StatsMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/UniverseMenu.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/UniversesMenu.cpp
 )
 
 # STM32 HAL/LL Drivers

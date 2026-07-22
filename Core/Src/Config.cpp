@@ -54,8 +54,18 @@ void Config::setArtnetOutTargetIp(bool manual, uint32_t targetIp) {
 
 void Config::_loadConfig() {
     _eeprom->EepromRead(0, sizeof(Conf), (uint8_t*)&_conf);
+
+    // set bools to 0 or 1
+    for (auto& outConf: _conf.dmxOuts) {
+        outConf.inputDmx = (uint8_t)outConf.inputDmx ? true : false;
+    }
+
+    _conf.artnetOut.enable = (uint8_t)_conf.artnetOut.enable ? true : false;
+    _conf.artnetOut.manualTargetIp = (uint8_t)_conf.artnetOut.manualTargetIp ? true : false;
 }
 
 void Config::_writeConfig() {
+    __disable_irq();
     _eeprom->EepromWrite(0, sizeof(Conf), (uint8_t*)&_conf);
+    __enable_irq();
 }

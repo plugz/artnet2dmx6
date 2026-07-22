@@ -17,6 +17,7 @@ public:
         bool enable;
         bool manualTargetIp;
         uint32_t targetIp;
+        uint16_t universe;
     };
 
     struct Conf {

@@ -35,8 +35,9 @@ protected:
     virtual void _enable() override;
     virtual void _disable() override;
     virtual void _applyConfig() override;
-    void _display();
-    void _displayValue();
+    virtual void _display() override;
+
+    virtual void _displayValue();
 
 protected:
     Conf _config;

@@ -10,6 +10,6 @@ MainMenu::MainMenu(CommonStuff const& common)
 
 MainMenu::~MainMenu() {}
 
-char const* MainMenu::name() { return "coucou"; }
+char const* MainMenu::name() { return "Artnet2Dmx6"; }
 
 } // namespace Menu
