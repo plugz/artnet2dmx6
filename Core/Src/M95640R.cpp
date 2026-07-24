@@ -149,6 +149,7 @@ void M95640R::EepromWrite(uint16_t address, uint8_t totalByteCount, uint8_t* buf
     uint8_t cmd;
     uint8_t addressBuff[2];
     uint8_t transmitByteCount;
+    uint8_t maxTransmitByteCount;
 
     do {
 
@@ -161,7 +162,8 @@ void M95640R::EepromWrite(uint16_t address, uint8_t totalByteCount, uint8_t* buf
         cmd = EEPROM_CMD_WRITE;
         addressBuff[0] = uint8_t(address >> 8);
         addressBuff[1] = uint8_t(address);
-        transmitByteCount = std::min(totalByteCount, uint8_t(32));
+        maxTransmitByteCount = 32 - (address % 32);
+        transmitByteCount = std::min(totalByteCount, maxTransmitByteCount);
 
         /* Put the SPI chip select low to start the transaction */
         HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_RESET);
@@ -176,8 +178,8 @@ void M95640R::EepromWrite(uint16_t address, uint8_t totalByteCount, uint8_t* buf
         /* Put the SPI chip select high to end the transaction */
         HAL_GPIO_WritePin(_csPinPeripheral, _csPin, GPIO_PIN_SET);
 
-        address += 32;
-        buffer += 32;
+        address += transmitByteCount;
+        buffer += transmitByteCount;
         totalByteCount -= transmitByteCount;
 
     } while (totalByteCount);
