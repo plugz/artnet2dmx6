@@ -31,7 +31,7 @@ void ArtnetOut::tick() {
 
     packet.fillForArtnetOut(_universe);
 
-    std::copy((uint8_t*)(_pbuf->payload), (uint8_t*)(_pbuf->payload) + packet.dataSize(), packet.data());
+    std::copy(packet.data(), packet.data() + packet.dataSize(), (uint8_t*)(_pbuf->payload));
 
     udp_send(_udp, _pbuf);
 

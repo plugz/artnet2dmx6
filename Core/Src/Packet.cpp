@@ -67,7 +67,7 @@ void Packet::fillForArtnetOut(uint16_t universe) {
     // physical
     _data[13] = 0;
 
-    // universe
+    // universe, little endian
     _data[14] = universe;
     _data[15] = universe >> 8;
 
@@ -75,6 +75,8 @@ void Packet::fillForArtnetOut(uint16_t universe) {
     uint16_t size = _dataSize - 18;
     size += size % 2;
     size = size ? size : 2;
-    _data[16] = size;
-    _data[17] = size >> 8;
+
+    // len, big endian
+    _data[16] = size >> 8;
+    _data[17] = size;
 }

@@ -42,7 +42,7 @@ static ArtnetOut artnetOut;
 
 Stats a2d6Stats;
 
-udp_pcb* udp;
+static udp_pcb* udp;
 
 extern netif gnetif;
 
