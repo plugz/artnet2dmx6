@@ -30,7 +30,7 @@ void Menu::applyConfig(bool changeMenu) {
     _applyConfig();
 //    _common.config->save(); // saving already done in Config::set*
     if (changeMenu)
-        left(Button::Event::PRESS);
+        Menu::left(Button::Event::PRESS);
 }
 
 void Menu::_applyConfig() {}

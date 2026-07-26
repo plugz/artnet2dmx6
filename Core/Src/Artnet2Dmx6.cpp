@@ -1,6 +1,8 @@
 #include "artnet2dmx6.h"
 
+#include "Artnet.hpp"
 #include "ArtnetIn.hpp"
+#include "ArtnetOut.hpp"
 #include "Chrono.hpp"
 #include "Config.hpp"
 #include "DmxIn.hpp"
@@ -36,6 +38,7 @@ static std::tuple<DmxOut<1>, DmxOut<2>, DmxOut<3>, DmxOut<4>, DmxOut<5>> dmxOuts
 static DmxIn dmxIn;
 
 static ArtnetIn artnetIn;
+static ArtnetOut artnetOut;
 
 Stats a2d6Stats;
 
@@ -120,12 +123,14 @@ static void eeprom_tick() {
 // config
 
 static void artnetin_reset();
+static void artnetout_reset();
 
 static void config_setup() {
     config.setup(
             [&](uint32_t ip, uint8_t subnet){(void)ip; (void)subnet; artnetin_reset();},
             {},
-            {});
+            [&](uint16_t universe, bool unicast, uint32_t ip){(void)universe; (void)unicast; (void)ip; artnetout_reset();}
+            );
 }
 
 static void config_tick() {
@@ -191,17 +196,7 @@ static void buttons_tick() {
 
 // dmxout
 
-static void dmxout_setup() {
-    std::apply([&](auto&... dmxOut){(dmxOut.init(), ...);}, dmxOuts);
-}
-
-static void dmxout_tick() {
-    std::apply([&](auto&... dmxOut){(dmxOut.tick(), ...);}, dmxOuts);
-}
-
-// dmxin
-
-static void dmxin_packet_cb(Packet const& packet) {
+static void dmxout_send_packet(Packet const& packet) {
     if (config.dmxOutInputDmx(0)) {
         std::get<DmxOut<1>>(dmxOuts).sendDmx(packet);
     }
@@ -216,6 +211,26 @@ static void dmxin_packet_cb(Packet const& packet) {
     }
     if (config.dmxOutInputDmx(4)) {
         std::get<DmxOut<5>>(dmxOuts).sendDmx(packet);
+    }
+}
+
+static void dmxout_setup() {
+    std::apply([&](auto&... dmxOut){(dmxOut.init(), ...);}, dmxOuts);
+}
+
+static void dmxout_tick() {
+    std::apply([&](auto&... dmxOut){(dmxOut.tick(), ...);}, dmxOuts);
+}
+
+// dmxin
+
+static void dmxin_packet_cb(Packet const& packet) {
+    // sent to artnetout first because dmxout overwrites artnet packet header
+    if (config.artnetOutEnable()) {
+        artnetOut.sendDmx(packet);
+    }
+    else {
+        dmxout_send_packet(packet);
     }
 }
 
@@ -267,12 +282,13 @@ static void artnetin_setup() {
     MX_LWIP_Init();
 
     udp = udp_new();
-    udp_bind(udp, IP_ADDR_ANY, ArtnetIn::PORT);
+    udp_bind(udp, IP_ADDR_ANY, ARTNET_DEFAULT_PORT);
     udp_recv(udp, udp_receive_callback, nullptr);
 
     artnetIn.init();
-    artnetIn.setPacketCallback(ARTNET_DMX, artnetin_dmx_cb);
+    artnetIn.setPacketCallback(ARTNET_CMD_DMX, artnetin_dmx_cb);
 }
+
 
 static void artnetin_reset() {
     udp_remove(udp);
@@ -298,12 +314,43 @@ static void artnetin_reset() {
     netif_set_up(&gnetif);
 
     udp = udp_new();
-    udp_bind(udp, IP_ADDR_ANY, ArtnetIn::PORT);
+    udp_bind(udp, IP_ADDR_ANY, ARTNET_DEFAULT_PORT);
     udp_recv(udp, udp_receive_callback, nullptr);
+
+    artnetout_reset();
 }
 
 static void artnetin_tick() {
     MX_LWIP_Process();
+}
+
+// artnet out
+
+static void artnetout_packetsent_cb(Packet const& packet) {
+    dmxout_send_packet(packet);
+}
+
+static void artnetout_setup() {
+    artnetOut.init(artnetout_packetsent_cb);
+
+    artnetout_reset();
+}
+
+static void artnetout_reset()  {
+    // set remote target so future calls to udp_send will target this address
+    {
+        ip4_addr_t targetAddress;
+        uint32_t const cfgTargetIp = config.artnetOutTargetIp();
+        IP4_ADDR(&targetAddress, uint8_t(cfgTargetIp >> 24), uint8_t(cfgTargetIp >> 16), uint8_t(cfgTargetIp >> 8), uint8_t(cfgTargetIp));
+        udp_connect(udp, &targetAddress, ARTNET_DEFAULT_PORT);
+    }
+
+    artnetOut.setNetwork(udp);
+    artnetOut.setUniverse(config.artnetOutUniverse());
+}
+
+static void artnetout_tick() {
+    artnetOut.tick();
 }
 
 // stats
@@ -346,6 +393,7 @@ void artnet2dmx6_init_beforeloop() {
     dmxin_setup();
 
     artnetin_setup();
+    artnetout_setup();
 
     stats_setup();
 
@@ -367,6 +415,7 @@ void artnet2dmx6_tick() {
     dmxin_tick();
 
     artnetin_tick();
+    artnetout_tick();
 
     stats_tick();
 }

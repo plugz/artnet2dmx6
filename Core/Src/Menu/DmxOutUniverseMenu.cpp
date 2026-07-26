@@ -1,4 +1,4 @@
-#include "UniverseMenu.hpp"
+#include "DmxOutUniverseMenu.hpp"
 
 #include "Config.hpp"
 
@@ -6,15 +6,15 @@
 
 namespace Menu {
 
-UniverseMenu::UniverseMenu(CommonStuff const& common)
+DmxOutUniverseMenu::DmxOutUniverseMenu(CommonStuff const& common)
     : GenericMenu<uint16_t>(common, {})
 {
 }
 
-UniverseMenu::~UniverseMenu() {
+DmxOutUniverseMenu::~DmxOutUniverseMenu() {
 }
 
-void UniverseMenu::initUniverseMenu(uint8_t idx) {
+void DmxOutUniverseMenu::initDmxOutUniverseMenu(uint8_t idx) {
     _idx = idx;
     _config.min = 0;
     _config.max = 0x7fff;

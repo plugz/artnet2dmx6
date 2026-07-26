@@ -42,13 +42,30 @@ void Config::setArtnetOutEnable(bool enable) {
     _writeConfig();
 }
 
-void Config::setArtnetOutTargetIp(bool manual, uint32_t targetIp) {
-    _conf.artnetOut.manualTargetIp = manual;
+void Config::setArtnetOutUniverse(uint16_t universe) {
+    _conf.artnetOut.universe = universe;
+    _writeConfig();
+
+    if (_artnetOutCallback) {
+        _artnetOutCallback(_conf.artnetOut.universe, _conf.artnetOut.manualTargetIp, _conf.artnetOut.targetIp);
+    }
+}
+
+void Config::setArtnetOutManualTargetIp(bool manualTargetIp) {
+    _conf.artnetOut.manualTargetIp = manualTargetIp;
+    _writeConfig();
+
+    if (_artnetOutCallback) {
+        _artnetOutCallback(_conf.artnetOut.universe, _conf.artnetOut.manualTargetIp, _conf.artnetOut.targetIp);
+    }
+}
+
+void Config::setArtnetOutTargetIp(uint32_t targetIp) {
     _conf.artnetOut.targetIp = targetIp;
     _writeConfig();
 
     if (_artnetOutCallback) {
-        _artnetOutCallback(manual, targetIp);
+        _artnetOutCallback(_conf.artnetOut.universe, _conf.artnetOut.manualTargetIp, _conf.artnetOut.targetIp);
     }
 }
 

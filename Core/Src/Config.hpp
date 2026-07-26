@@ -15,9 +15,9 @@ public:
 
     struct ArtnetOutConf {
         bool enable;
+        uint16_t universe;
         bool manualTargetIp;
         uint32_t targetIp;
-        uint16_t universe;
     };
 
     struct Conf {
@@ -32,7 +32,7 @@ public:
     // void(uint8_t idx, uint16_t universe)
     using DmxOutCallback = std::function<void(uint8_t, uint16_t)>;
     // void(uint8_t idx, uint16_t universe)
-    using ArtnetOutCallback = std::function<void(bool, uint32_t)>;
+    using ArtnetOutCallback = std::function<void(uint16_t, bool, uint32_t)>;
 
 public:
     Config(M95640R* eeprom);
@@ -49,10 +49,18 @@ public:
     uint16_t dmxOutInputUniverse(uint8_t outputIdx) const { return _conf.dmxOuts[outputIdx].inputArtnetUniverse; }
 
     void setArtnetOutEnable(bool enable);
-    void setArtnetOutTargetIp(bool manual, uint32_t targetIp = 0);
+    void setArtnetOutUniverse(uint16_t universe);
+    void setArtnetOutManualTargetIp(bool manualTargetIp);
+    void setArtnetOutTargetIp(uint32_t targetIp);
     bool artnetOutEnable() const { return _conf.artnetOut.enable; }
-    bool artnetOutUnicast() const { return _conf.artnetOut.manualTargetIp; }
-    uint32_t artnetOutTargetIp() const { return _conf.artnetOut.targetIp; }
+    bool artnetOutManualTargetIp() const { return _conf.artnetOut.manualTargetIp; }
+    uint32_t artnetOutTargetIp() const {
+        if (_conf.artnetOut.manualTargetIp)
+            return _conf.artnetOut.targetIp;
+        uint32_t subnetMask = ~(uint64_t(1 << (32 - _conf.subnet)) - 1);
+        return _conf.ip | ~subnetMask;
+    }
+    uint16_t artnetOutUniverse() const { return _conf.artnetOut.universe; }
 
 private:
     void _loadConfig();

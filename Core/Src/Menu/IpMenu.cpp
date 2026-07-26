@@ -46,6 +46,17 @@ void IpMenu::down(Button::Event e) {
     _moveCursor();
 }
 
+void IpMenu::left(Button::Event e) {
+    if (e != Button::Event::PRESS)
+        return;
+    if (_editIdx == 0) {
+        Menu::left(e);
+        return;
+    }
+    --_editIdx;
+    _moveCursor();
+}
+
 void IpMenu::right(Button::Event e) {
     if (e != Button::Event::PRESS)
         return;

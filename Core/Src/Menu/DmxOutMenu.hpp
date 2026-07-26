@@ -3,11 +3,11 @@
 
 #include "ContainerMenu.hpp"
 #include "DmxOutInputMenu.hpp"
-#include "UniverseMenu.hpp"
+#include "DmxOutUniverseMenu.hpp"
 
 namespace Menu {
 
-using DmxOutMenuContainer = ContainerMenu<DmxOutInputMenu, UniverseMenu>;
+using DmxOutMenuContainer = ContainerMenu<DmxOutInputMenu, DmxOutUniverseMenu>;
 
 class DmxOutMenu : public DmxOutMenuContainer {
 public:

@@ -1,14 +1,14 @@
-#ifndef __MENU_IPMENU_HPP__
-#define __MENU_IPMENU_HPP__
+#ifndef __MENU_ARTNETOUTIPMENU_HPP__
+#define __MENU_ARTNETOUTIPMENU_HPP__
 
 #include "Menu.hpp"
 
 namespace Menu {
 
-class IpMenu : public Menu {
+class ArtnetOutIpMenu : public Menu {
 public:
-    IpMenu(CommonStuff const& common);
-    virtual ~IpMenu();
+    ArtnetOutIpMenu(CommonStuff const& common);
+    virtual ~ArtnetOutIpMenu();
 
     virtual char const* name() override;
 
@@ -23,13 +23,11 @@ protected:
     virtual void _applyConfig() override;
     void _display();
     void _displayIp();
-    void _displaySubnet();
     void _moveCursor();
 
 protected:
     unsigned int _editIdx;
     uint8_t _ipParts[4];
-    unsigned int _subnet;
 };
 
 } // namespace Menu

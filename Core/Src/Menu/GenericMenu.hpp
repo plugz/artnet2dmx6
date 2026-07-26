@@ -12,15 +12,15 @@ public:
     struct Conf {
         T min;
         T max;
-        char name[16] = "INT";
-        char inName[16] = "EDIT INT";
-        char desc[16] = "";
+        char name[19] = "INT";
+        char inName[19] = "EDIT INT";
+        char desc[19] = "";
         std::function<T(void)> getValueCallback = nullptr;
         std::function<void(T const&)> setValueCallback = nullptr;
     };
 
 public:
-    GenericMenu(CommonStuff const& common, Conf const& c);
+    GenericMenu(CommonStuff const& common, Conf const& c = {});
     virtual ~GenericMenu();
 
     void setConfig(Conf const& c);

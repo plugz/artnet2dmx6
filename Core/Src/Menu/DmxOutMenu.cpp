@@ -18,7 +18,7 @@ void DmxOutMenu::initDmxOutMenu(uint8_t idx) {
     snprintf(_name, sizeof(_name), "DMX Out #%i", _idx + 1);
 
     std::get<DmxOutInputMenu>(_subMenusTuple).initDmxOutInputMenu(_idx);
-    std::get<UniverseMenu>(_subMenusTuple).initUniverseMenu(_idx);
+    std::get<DmxOutUniverseMenu>(_subMenusTuple).initDmxOutUniverseMenu(_idx);
 }
 
 char const* DmxOutMenu::name() {
@@ -26,7 +26,7 @@ char const* DmxOutMenu::name() {
 }
 
 void DmxOutMenu::_enable() {
-    _currentMenuIdx = 0;
+    _currentMenuIdx = _common.config->dmxOutInputDmx(_idx) ? 0 : _currentMenuIdx;
 
     DmxOutMenuContainer::_enable();
 }
@@ -35,7 +35,7 @@ void DmxOutMenu::_display() {
     _common.screen->printLine(0, name());
     unsigned int sizeReduce = _common.config->dmxOutInputDmx(_idx) ? 1 : 0;
 
-    _currentMenuIdx %= _subMenus.size() - sizeReduce;
+//    _currentMenuIdx %= _subMenus.size() - sizeReduce;
 
     char line[LINE_BUFF_SIZE];
     {

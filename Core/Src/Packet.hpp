@@ -21,6 +21,8 @@ public:
     uint16_t dmxDataSize() const { return _dataSize - 18; }
     uint16_t dmxUniverse() const { return _dmxUniverse; }
 
+    void fillForArtnetOut(uint16_t universe);
+
 private:
     std::shared_ptr<uint8_t*> _dataContainer; // we keep this here so it is freed when not needed anymore
     uint8_t* _data;
