@@ -13,6 +13,7 @@
 #include "M95640R.hpp"
 #include "Menu/MainMenu.hpp"
 #include "Stats.hpp"
+#include "StatusLeds.hpp"
 
 #include "i2c.h"
 #include "lwip.h"
@@ -40,11 +41,12 @@ static DmxIn dmxIn;
 static ArtnetIn artnetIn;
 static ArtnetOut artnetOut;
 
-Stats a2d6Stats;
-
-static udp_pcb* udp;
+static StatusLeds statusLeds{mcp};
 
 extern netif gnetif;
+static udp_pcb* udp;
+
+Stats a2d6Stats;
 
 // C part
 
@@ -196,21 +198,26 @@ static void buttons_tick() {
 
 // dmxout
 
-static void dmxout_send_packet(Packet const& packet) {
+static void dmxout_send_dmxin_packet(Packet const& packet) {
     if (config.dmxOutInputDmx(0)) {
         std::get<DmxOut<1>>(dmxOuts).sendDmx(packet);
+        statusLeds.setDmxOut(0);
     }
     if (config.dmxOutInputDmx(1)) {
         std::get<DmxOut<2>>(dmxOuts).sendDmx(packet);
+        statusLeds.setDmxOut(1);
     }
     if (config.dmxOutInputDmx(2)) {
         std::get<DmxOut<3>>(dmxOuts).sendDmx(packet);
+        statusLeds.setDmxOut(2);
     }
     if (config.dmxOutInputDmx(3)) {
         std::get<DmxOut<4>>(dmxOuts).sendDmx(packet);
+        statusLeds.setDmxOut(3);
     }
     if (config.dmxOutInputDmx(4)) {
         std::get<DmxOut<5>>(dmxOuts).sendDmx(packet);
+        statusLeds.setDmxOut(4);
     }
 }
 
@@ -225,12 +232,14 @@ static void dmxout_tick() {
 // dmxin
 
 static void dmxin_packet_cb(Packet const& packet) {
+    statusLeds.setDmxIn();
+
     // sent to artnetout first because dmxout overwrites artnet packet header
     if (config.artnetOutEnable()) {
         artnetOut.sendDmx(packet);
     }
     else {
-        dmxout_send_packet(packet);
+        dmxout_send_dmxin_packet(packet);
     }
 }
 
@@ -245,20 +254,27 @@ static void dmxin_tick() {
 // artnet
 
 static void artnetin_dmx_cb(Packet const& packet) {
+    statusLeds.setArtnetIn();
+
     if ((!config.dmxOutInputDmx(0)) && (config.dmxOutInputUniverse(0) == packet.dmxUniverse())) {
         std::get<DmxOut<1>>(dmxOuts).sendDmx(packet);
+        statusLeds.setDmxOut(0);
     }
     if ((!config.dmxOutInputDmx(1)) && (config.dmxOutInputUniverse(1) == packet.dmxUniverse())) {
         std::get<DmxOut<2>>(dmxOuts).sendDmx(packet);
+        statusLeds.setDmxOut(1);
     }
     if ((!config.dmxOutInputDmx(2)) && (config.dmxOutInputUniverse(2) == packet.dmxUniverse())) {
         std::get<DmxOut<3>>(dmxOuts).sendDmx(packet);
+        statusLeds.setDmxOut(2);
     }
     if ((!config.dmxOutInputDmx(3)) && (config.dmxOutInputUniverse(3) == packet.dmxUniverse())) {
         std::get<DmxOut<4>>(dmxOuts).sendDmx(packet);
+        statusLeds.setDmxOut(3);
     }
     if ((!config.dmxOutInputDmx(4)) && (config.dmxOutInputUniverse(4) == packet.dmxUniverse())) {
         std::get<DmxOut<5>>(dmxOuts).sendDmx(packet);
+        statusLeds.setDmxOut(4);
     }
 }
 
@@ -288,7 +304,6 @@ static void artnetin_setup() {
     artnetIn.init();
     artnetIn.setPacketCallback(ARTNET_CMD_DMX, artnetin_dmx_cb);
 }
-
 
 static void artnetin_reset() {
     udp_remove(udp);
@@ -327,7 +342,9 @@ static void artnetin_tick() {
 // artnet out
 
 static void artnetout_packetsent_cb(Packet const& packet) {
-    dmxout_send_packet(packet);
+    statusLeds.setArtnetOut();
+
+    dmxout_send_dmxin_packet(packet);
 }
 
 static void artnetout_setup() {
@@ -351,6 +368,16 @@ static void artnetout_reset()  {
 
 static void artnetout_tick() {
     artnetOut.tick();
+}
+
+// status leds
+
+static void statusleds_setup() {
+    statusLeds.init();
+}
+
+static void statusleds_tick() {
+    statusLeds.tick();
 }
 
 // stats
@@ -395,6 +422,8 @@ void artnet2dmx6_init_beforeloop() {
     artnetin_setup();
     artnetout_setup();
 
+    statusleds_setup();
+
     stats_setup();
 
     __HAL_UART_ENABLE_IT(&huart6, UART_IT_RXNE);
@@ -416,6 +445,8 @@ void artnet2dmx6_tick() {
 
     artnetin_tick();
     artnetout_tick();
+
+    statusleds_tick();
 
     stats_tick();
 }

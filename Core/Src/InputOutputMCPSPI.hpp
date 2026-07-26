@@ -20,6 +20,7 @@ public:
     bool getCurrentValue(uint8_t pin) const;
 
     void setValue(uint8_t pin, bool value);
+    void setValues(uint8_t pins);
     bool needWrite() const { return _needWrite; }
     void write();
 

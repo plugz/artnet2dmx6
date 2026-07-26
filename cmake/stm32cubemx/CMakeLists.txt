@@ -75,6 +75,7 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/MCP23S17.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Packet.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Stats.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/StatusLeds.cpp
 
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/ArtnetOutMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/ArtnetOutIpMenu.cpp

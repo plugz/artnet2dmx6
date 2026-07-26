@@ -52,6 +52,11 @@ void InputOutputMCPSPI::setValue(uint8_t pin, bool value) {
     _needWrite = true;
 }
 
+void InputOutputMCPSPI::setValues(uint8_t pins) {
+    _currentWriteValue = pins;
+    _needWrite = true;
+}
+
 void InputOutputMCPSPI::write() {
     writeGpioPortB(_currentWriteValue);
     _needWrite = false;
