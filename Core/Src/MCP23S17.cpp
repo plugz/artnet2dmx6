@@ -83,12 +83,12 @@ void MCP23S17::writeGpioPort(uint16_t value) {
 
 void MCP23S17::writeGpioPortA(uint8_t value) {
     _gpioState = (_gpioState & 0xff) | ((uint16_t)value << 8);
-    _gpioWriteWord(MCP23S17_GPIOA, value);
+    _gpioWriteByte(MCP23S17_GPIOA, value);
 }
 
 void MCP23S17::writeGpioPortB(uint8_t value) {
     _gpioState = (_gpioState & 0xff00) | ((uint16_t)value);
-    _gpioWriteWord(MCP23S17_GPIOB, value);
+    _gpioWriteByte(MCP23S17_GPIOB, value);
 }
 
 uint16_t MCP23S17::readGpioPort() {

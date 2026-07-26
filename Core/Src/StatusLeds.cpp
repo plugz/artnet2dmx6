@@ -18,26 +18,26 @@ void StatusLeds::tick() {
     _timer.reset();
 
     if (_step++ % 2) {
-        _mcp.setValues(1);
+        _mcp.setValues(~_status);
         _status = 0;
     }
     else {
-        _mcp.setValues(0);
+        _mcp.setValues(0xff);
     }
 }
 
 void StatusLeds::setArtnetIn() {
-    _status |= 0b10000000;
+    _status |= 0b00000001;
 }
 
 void StatusLeds::setArtnetOut() {
-    _status |= 0b01000000;
+    _status |= 0b00000010;
 }
 
 void StatusLeds::setDmxIn() {
-    _status |= 0b00100000;
+    _status |= 0b00000100;
 }
 
 void StatusLeds::setDmxOut(unsigned int idx) {
-    _status |= 1 << idx;
+    _status |= 0b10000000 >> (4 - idx);
 }
