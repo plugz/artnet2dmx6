@@ -79,4 +79,7 @@ void Packet::fillForArtnetOut(uint16_t universe) {
     // len, big endian
     _data[16] = size >> 8;
     _data[17] = size;
+
+    // adjust _dataSize with even value
+    _dataSize = 18 + size;
 }

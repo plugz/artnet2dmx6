@@ -31,6 +31,9 @@ void ArtnetOut::tick() {
 
     pbuf* p = (pbuf*)(((uint8_t*)(packet.dataContainer())) - offsetof(pbuf, payload));
 
+    // reduce pbuf size
+    pbuf_realloc(p, packet.dataSize());
+
     // This always returns ERR_OK for some reason
     bool success = (udp_send(_udp, p) == ERR_OK);
 
