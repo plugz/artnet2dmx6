@@ -63,7 +63,7 @@ void DmxOut<TUart>::tick() {
     if (_currentStep == 0) {
         if (!_buffers[_nextBufferIdx])
             return;
-        _currentBufferIdx = (_currentBufferIdx + 1) % std::size(_buffers);
+        _currentBufferIdx = _nextBufferIdx;
         _nextBufferIdx = (_nextBufferIdx + 1) % std::size(_buffers);
         _txPinBreakMode<TUart>();
         _timer.reset(BREAK_DELAY);

@@ -23,6 +23,10 @@ public:
 
     void fillForArtnetOut(uint16_t universe);
 
+    void pushByte(uint8_t byte) { _data[_dataSize++] = byte; }
+
+    uint8_t** dataContainer() { return _dataContainer.get(); }
+
 private:
     std::shared_ptr<uint8_t*> _dataContainer; // we keep this here so it is freed when not needed anymore
     uint8_t* _data;

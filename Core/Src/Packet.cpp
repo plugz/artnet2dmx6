@@ -53,7 +53,7 @@ void Packet::fillForArtnetOut(uint16_t universe) {
     std::copy(ARTNET_CODE_STR, ARTNET_CODE_STR + sizeof(ARTNET_CODE_STR), _data);
 
     // OPCODE
-    _data[8] = ARTNET_CMD_DMX;
+    _data[8] = ARTNET_CMD_DMX & 0xff;
     _data[9] = ARTNET_CMD_DMX >> 8;
 
     // version 14

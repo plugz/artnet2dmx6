@@ -231,7 +231,15 @@ static void dmxout_tick() {
 
 // dmxin
 
-static void dmxin_packet_cb(Packet const& packet) {
+static void pbufFree(uint8_t** pbufPayload);
+
+static Packet dmxin_newpacket_cb() {
+    pbuf* p = pbuf_alloc(PBUF_TRANSPORT, 18 + 512, PBUF_RAM);
+    std::shared_ptr<uint8_t*> pbufPtr{(uint8_t**)&(p->payload), pbufFree};
+    return Packet{pbufPtr, 17, false};
+}
+
+static void dmxin_packetready_cb(Packet const& packet) {
     statusLeds.setDmxIn();
 
     // sent to artnetout first because dmxout overwrites artnet packet header
@@ -245,7 +253,7 @@ static void dmxin_packet_cb(Packet const& packet) {
 }
 
 static void dmxin_setup() {
-    dmxIn.init(dmxin_packet_cb);
+    dmxIn.init(dmxin_newpacket_cb, dmxin_packetready_cb);
 }
 
 static void dmxin_tick() {
@@ -407,7 +415,7 @@ void artnet2dmx6_init_beforeloop() {
 
     // enable secondary 5V
     HAL_GPIO_WritePin(PWR_5V_EN_GPIO_GPIO_Port, PWR_5V_EN_GPIO_Pin, GPIO_PIN_SET);
-    Chrono::delay(Chrono::Milliseconds{250});
+    Chrono::delay(Chrono::Milliseconds{500});
 
     eeprom_setup();
     config_setup();

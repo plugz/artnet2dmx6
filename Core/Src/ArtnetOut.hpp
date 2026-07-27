@@ -4,7 +4,6 @@
 #include "Packet.hpp"
 
 struct udp_pcb;
-struct pbuf;
 
 class ArtnetOut {
 public:
@@ -25,8 +24,6 @@ private:
     PacketSentCallback _cb = nullptr;
     udp_pcb* _udp = nullptr;
     uint16_t _universe = 0;
-
-    pbuf* _pbuf = nullptr;
 
     Packet _buffers[2];
     unsigned int _currentBufferIdx = 0; // currently sending out

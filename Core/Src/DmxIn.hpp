@@ -1,25 +1,27 @@
 #ifndef __DMXIN_HPP__
 #define __DMXIN_HPP__
 
-#include <array>
-#include <cstdint>
+#include "Packet.hpp"
 
-class Packet;
+#include <cstdint>
 
 class DmxIn {
 public:
-    using PacketCallback = void(*)(Packet const&);
+    // DmxIn calls this to get a new packet buffer
+    using NewPacketCallback = Packet (*)();
+    // DmxIn calls this to send a buffer that has been filled
+    using PacketReadyCallback = void(*)(Packet const&);
 
 public:
     DmxIn();
     ~DmxIn();
 
-    void init(PacketCallback cb);
+    void init(NewPacketCallback npcb, PacketReadyCallback prcb);
     void tick();
 
     // called from interrupt : no heavy processing here
     inline void handleBreak() {
-        if (_currentByteIdx == 0)
+        if (_currentPacket.dataSize() == 17)
             return;
 
         _swapAndSend();
@@ -27,8 +29,8 @@ public:
 
     // called from interrupt : no heavy processing here
     inline void handleByte(uint8_t byte) {
-        _currentBufferDmxData[_currentByteIdx++] = byte;
-        if (_currentByteIdx < 513)
+        _currentPacket.pushByte(byte);
+        if (_currentPacket.dataSize() < 513 + 17)
             return;
 
         _swapAndSend();
@@ -36,25 +38,20 @@ public:
 
 private:
     inline void _swapAndSend() {
-        _mustSendBytes = _currentByteIdx;
-
-        _currentBufferIdx = (_currentBufferIdx + 1) % std::size(_buffers);
-        _currentBufferDmxData = _buffers[_currentBufferIdx].data() + 17;
-        _currentByteIdx = 0;
+        _readyToSendPacket = _currentPacket;
+        _currentPacket = _nextPacket;
+        _nextPacket = {};
     }
 
 private:
-    // 512 +18 to have same size as artnet dmx packet
-    std::array<uint8_t, 512 + 18> _buffers[3];
-    uint8_t* _bufferPtrs[3]; // here for Packet creation
-    uint16_t _currentBufferIdx = 0;
+    Packet _currentPacket;
+    Packet _readyToSendPacket;
 
-    uint8_t* _currentBufferDmxData = nullptr;
-    uint16_t _currentByteIdx = 0;
+    // have an empty packet ready so the new packet creation is done outside of an interrupt
+    Packet _nextPacket;
 
-    PacketCallback _callback = nullptr;
-
-    uint16_t _mustSendBytes = 0;
+    NewPacketCallback _npcb = nullptr;
+    PacketReadyCallback _prcb = nullptr;
 };
 
 #endif

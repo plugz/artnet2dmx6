@@ -8,8 +8,6 @@ ArtnetOut::~ArtnetOut() {}
 
 void ArtnetOut::init(PacketSentCallback cb) {
     _cb = cb;
-
-    _pbuf = pbuf_alloc(PBUF_TRANSPORT, 18 + 512, PBUF_RAM);
 }
 
 void ArtnetOut::setNetwork(udp_pcb* udp) {
@@ -31,10 +29,10 @@ void ArtnetOut::tick() {
 
     packet.fillForArtnetOut(_universe);
 
-    std::copy(packet.data(), packet.data() + packet.dataSize(), (uint8_t*)(_pbuf->payload));
+    pbuf* p = (pbuf*)(((uint8_t*)(packet.dataContainer())) - offsetof(pbuf, payload));
 
     // This always returns ERR_OK for some reason
-    bool success = (udp_send(_udp, _pbuf) == ERR_OK);
+    bool success = (udp_send(_udp, p) == ERR_OK);
 
     if (_cb)
         _cb(packet, success);
