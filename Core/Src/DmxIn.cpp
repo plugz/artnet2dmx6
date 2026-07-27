@@ -3,8 +3,9 @@
 #include "Packet.hpp"
 
 DmxIn::DmxIn() {
-    _bufferPtrs[0] = _buffers[0].data();
-    _bufferPtrs[1] = _buffers[1].data();
+    for (unsigned int i = 0; i < std::size(_buffers); ++i) {
+        _bufferPtrs[i] = _buffers[i].data();
+    }
 }
 
 DmxIn::~DmxIn() {}
@@ -19,7 +20,8 @@ void DmxIn::tick() {
     if (!_mustSendBytes)
         return;
 
-    unsigned int packetToSendBufferIdx = (_currentBufferIdx + 1) % 2;
+    // send previous packet (previous from the one that is being written in)
+    unsigned int packetToSendBufferIdx = (_currentBufferIdx + (std::size(_buffers) - 1)) % std::size(_buffers);
 
     if (_callback) {
         Packet p{std::shared_ptr<uint8_t*>{&_bufferPtrs[packetToSendBufferIdx], freeNothing}, uint16_t(_mustSendBytes + 17), false};
