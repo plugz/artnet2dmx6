@@ -8,7 +8,7 @@ struct pbuf;
 
 class ArtnetOut {
 public:
-    using PacketSentCallback = void (*)(Packet const&);
+    using PacketSentCallback = void (*)(Packet const&, bool);
 
 public:
     ArtnetOut();

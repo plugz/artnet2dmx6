@@ -33,10 +33,11 @@ void ArtnetOut::tick() {
 
     std::copy(packet.data(), packet.data() + packet.dataSize(), (uint8_t*)(_pbuf->payload));
 
-    udp_send(_udp, _pbuf);
+    // This always returns ERR_OK for some reason
+    bool success = (udp_send(_udp, _pbuf) == ERR_OK);
 
     if (_cb)
-        _cb(packet);
+        _cb(packet, success);
 
     packet = {};
 }

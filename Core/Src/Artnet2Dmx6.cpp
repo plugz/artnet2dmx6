@@ -235,7 +235,8 @@ static void dmxin_packet_cb(Packet const& packet) {
     statusLeds.setDmxIn();
 
     // sent to artnetout first because dmxout overwrites artnet packet header
-    if (config.artnetOutEnable()) {
+    // netif checks somehow always return true
+    if (config.artnetOutEnable() && netif_is_link_up(&gnetif) && netif_is_up(&gnetif)) {
         artnetOut.sendDmx(packet);
     }
     else {
@@ -341,8 +342,9 @@ static void artnetin_tick() {
 
 // artnet out
 
-static void artnetout_packetsent_cb(Packet const& packet) {
-    statusLeds.setArtnetOut();
+static void artnetout_packetsent_cb(Packet const& packet, bool success) {
+    if (success)
+        statusLeds.setArtnetOut();
 
     dmxout_send_dmxin_packet(packet);
 }
