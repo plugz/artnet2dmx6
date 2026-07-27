@@ -8,9 +8,9 @@
 class DmxIn {
 public:
     // DmxIn calls this to get a new packet buffer
-    using NewPacketCallback = Packet (*)();
+    using NewPacketCallback = void (*)(Packet*, Packet*);
     // DmxIn calls this to send a buffer that has been filled
-    using PacketReadyCallback = void(*)(Packet const&);
+    using PacketReadyCallback = void(*)(Packet const&, Packet const&);
 
 public:
     DmxIn();
@@ -21,7 +21,7 @@ public:
 
     // called from interrupt : no heavy processing here
     inline void handleBreak() {
-        if (_currentPacket.dataSize() == 17)
+        if (_currentPackets[0].dataSize() == 17)
             return;
 
         _swapAndSend();
@@ -29,8 +29,9 @@ public:
 
     // called from interrupt : no heavy processing here
     inline void handleByte(uint8_t byte) {
-        _currentPacket.pushByte(byte);
-        if (_currentPacket.dataSize() < 513 + 17)
+        for (auto& currentPacket: _currentPackets)
+            currentPacket.pushByte(byte);
+        if (_currentPackets[0].dataSize() < 513 + 17)
             return;
 
         _swapAndSend();
@@ -38,17 +39,19 @@ public:
 
 private:
     inline void _swapAndSend() {
-        _readyToSendPacket = _currentPacket;
-        _currentPacket = _nextPacket;
-        _nextPacket = {};
+        for (unsigned int i = 0; i < std::size(_currentPackets); ++i) {
+            _readyToSendPackets[i] = _currentPackets[i];
+            _currentPackets[i] = _nextPackets[i];
+            _nextPackets[i] = {};
+        }
     }
 
 private:
-    Packet _currentPacket;
-    Packet _readyToSendPacket;
+    Packet _currentPackets[2];
+    Packet _readyToSendPackets[2];
 
     // have an empty packet ready so the new packet creation is done outside of an interrupt
-    Packet _nextPacket;
+    Packet _nextPackets[2];
 
     NewPacketCallback _npcb = nullptr;
     PacketReadyCallback _prcb = nullptr;

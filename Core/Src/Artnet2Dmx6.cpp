@@ -233,23 +233,30 @@ static void dmxout_tick() {
 
 static void pbufFree(uint8_t** pbufPayload);
 
-static Packet dmxin_newpacket_cb() {
-    pbuf* p = pbuf_alloc(PBUF_TRANSPORT, 18 + 512, PBUF_RAM);
-    std::shared_ptr<uint8_t*> pbufPtr{(uint8_t**)&(p->payload), pbufFree};
-    return Packet{pbufPtr, 17, false};
+static void dmxin_newpacket_cb(Packet* artnetOutPacket, Packet* dmxOutPacket) {
+    {
+        pbuf* p = pbuf_alloc(PBUF_TRANSPORT, 18 + 512, PBUF_RAM);
+        std::shared_ptr<uint8_t*> pbufPtr{(uint8_t**)&(p->payload), pbufFree};
+        *artnetOutPacket = Packet{pbufPtr, 17, false};
+    }
+
+    {
+        // TODO static buffers
+        pbuf* p = pbuf_alloc(PBUF_TRANSPORT, 18 + 512, PBUF_RAM);
+        std::shared_ptr<uint8_t*> pbufPtr{(uint8_t**)&(p->payload), pbufFree};
+        *dmxOutPacket = Packet{pbufPtr, 17, false};
+    }
 }
 
-static void dmxin_packetready_cb(Packet const& packet) {
+static void dmxin_packetready_cb(Packet const& artnetOutPacket, Packet const& dmxOutPacket) {
     statusLeds.setDmxIn();
 
-    // sent to artnetout first because dmxout overwrites artnet packet header
     // netif checks somehow always return true
     if (config.artnetOutEnable() && netif_is_link_up(&gnetif) && netif_is_up(&gnetif)) {
-        artnetOut.sendDmx(packet);
+        artnetOut.sendDmx(artnetOutPacket);
     }
-    else {
-        dmxout_send_dmxin_packet(packet);
-    }
+
+    dmxout_send_dmxin_packet(dmxOutPacket);
 }
 
 static void dmxin_setup() {
@@ -353,8 +360,6 @@ static void artnetin_tick() {
 static void artnetout_packetsent_cb(Packet const& packet, bool success) {
     if (success)
         statusLeds.setArtnetOut();
-
-    dmxout_send_dmxin_packet(packet);
 }
 
 static void artnetout_setup() {

@@ -13,12 +13,14 @@ void DmxIn::init(NewPacketCallback npcb, PacketReadyCallback prcb) {
 }
 
 void DmxIn::tick() {
-    if (!_nextPacket)
-        _nextPacket = _npcb();
+    if (!_nextPackets[0]) {
+        _npcb(_nextPackets, _nextPackets + 1);
+    }
 
-    if (!_readyToSendPacket)
+    if (!_readyToSendPackets[0])
         return;
 
-    _prcb(_readyToSendPacket);
-    _readyToSendPacket = {};
+    _prcb(_readyToSendPackets[0], _readyToSendPackets[1]);
+    for (auto& p : _readyToSendPackets)
+        p = {};
 }
