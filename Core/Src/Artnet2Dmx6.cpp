@@ -233,6 +233,14 @@ static void dmxout_tick() {
 
 static void pbufFree(uint8_t** pbufPayload);
 
+static void freeNothing(uint8_t**) {}
+static uint8_t dmxInBufferForDmxOut[(18 + 512) * 3];
+static uint8_t* dmxInBufferPtrs[3] = {
+    dmxInBufferForDmxOut,
+    dmxInBufferForDmxOut + (18 + 512),
+    dmxInBufferForDmxOut + (18 + 512) * 2};
+static uint8_t dmxInBufferIdx = 0;
+
 static void dmxin_newpacket_cb(Packet* artnetOutPacket, Packet* dmxOutPacket) {
     {
         pbuf* p = pbuf_alloc(PBUF_TRANSPORT, 18 + 512, PBUF_RAM);
@@ -241,10 +249,9 @@ static void dmxin_newpacket_cb(Packet* artnetOutPacket, Packet* dmxOutPacket) {
     }
 
     {
-        // TODO static buffers
-        pbuf* p = pbuf_alloc(PBUF_TRANSPORT, 18 + 512, PBUF_RAM);
-        std::shared_ptr<uint8_t*> pbufPtr{(uint8_t**)&(p->payload), pbufFree};
-        *dmxOutPacket = Packet{pbufPtr, 17, false};
+        std::shared_ptr<uint8_t*> ptr{&dmxInBufferPtrs[dmxInBufferIdx], freeNothing};
+        dmxInBufferIdx = (dmxInBufferIdx + 1) % std::size(dmxInBufferPtrs);
+        *dmxOutPacket = Packet{ptr, 17, false};
     }
 }
 
