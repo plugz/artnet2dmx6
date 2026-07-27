@@ -5,12 +5,13 @@
 #include "ContainerMenu.hpp"
 #include "DmxOutsMenu.hpp"
 #include "IpMenu.hpp"
+#include "QuickConfigMenu.hpp"
 #include "ScreenOffMenu.hpp"
-#include "StatsMenu.hpp"
+//#include "StatsMenu.hpp"
 
 namespace Menu {
 
-using MainMenuContainer = ContainerMenu<StatsMenu, IpMenu, DmxOutsMenu, ArtnetOutMenu, ScreenOffMenu>;
+using MainMenuContainer = ContainerMenu<IpMenu, DmxOutsMenu, ArtnetOutMenu, QuickConfigMenu, ScreenOffMenu>;
 
 class MainMenu : public MainMenuContainer
 {

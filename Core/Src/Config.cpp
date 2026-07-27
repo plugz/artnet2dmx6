@@ -5,9 +5,8 @@
 Config::Config(M95640R* eeprom) : _eeprom(eeprom) {
 }
 
-void Config::setup(NetworkCallback const& networkCallback, DmxOutCallback const& dmxOutCallback, ArtnetOutCallback const& artnetOutCallback) {
+void Config::setup(NetworkCallback const& networkCallback, ArtnetOutCallback const& artnetOutCallback) {
     _networkCallback = networkCallback;
-    _dmxOutCallback = dmxOutCallback;
     _artnetOutCallback = artnetOutCallback;
     _loadConfig();
 }
@@ -31,10 +30,6 @@ void Config::setDmxOutInputDmx(uint8_t idx, bool inputDmx) {
 void Config::setDmxOutInputUniverse(uint8_t idx, uint16_t universe) {
     _conf.dmxOuts[idx].inputArtnetUniverse = universe;
     _writeConfig();
-
-    if (_dmxOutCallback) {
-        _dmxOutCallback(idx, universe);
-    }
 }
 
 void Config::setArtnetOutEnable(bool enable) {
@@ -69,6 +64,43 @@ void Config::setArtnetOutTargetIp(uint32_t targetIp) {
     }
 }
 
+void Config::applyConfSplitter(){
+    for (unsigned int i = 0 ; i < 5 ; ++i) {
+        setDmxOutInputDmx(i, true);
+    }
+    setArtnetOutEnable(false);
+}
+
+void Config::applyConfArtnetToDmx(){
+    for (unsigned int i = 0 ; i < 5 ; ++i) {
+        setDmxOutInputDmx(i, false);
+        setDmxOutInputUniverse(i, i);
+    }
+    setArtnetOutEnable(false);
+}
+
+void Config::applyConfResetAll(){
+    _conf.ip = 0x0200001f;
+    _conf.subnet = 8;
+
+    for (unsigned int i = 0; i < 5; ++i) {
+        _conf.dmxOuts[i].inputDmx = false;
+        _conf.dmxOuts[i].inputArtnetUniverse = i;
+    }
+
+    _conf.artnetOut.enable = true;
+    _conf.artnetOut.universe = 0;
+    _conf.artnetOut.manualTargetIp = false;
+    _conf.artnetOut.targetIp = 0x02000001;
+
+    _writeConfig();
+
+    if (_networkCallback)
+        _networkCallback(_conf.ip, _conf.subnet);
+    if (_artnetOutCallback)
+        _artnetOutCallback(_conf.artnetOut.universe, _conf.artnetOut.manualTargetIp, _conf.artnetOut.targetIp);
+}
+
 void Config::_loadConfig() {
     _eeprom->EepromRead(0, sizeof(Conf), (uint8_t*)&_conf);
 
@@ -77,7 +109,7 @@ void Config::_loadConfig() {
     // set ip to a default 2.0.0.31/8
 
     if ((_conf.ip == 0xffffffff) || (_conf.ip == 0))
-        _conf.ip = 0x1f000002;
+        _conf.ip = 0x0200001f;
 
     if ((_conf.subnet != 24) && (_conf.subnet != 16) && (_conf.subnet != 8))
         _conf.subnet = 8;
@@ -97,7 +129,7 @@ void Config::_loadConfig() {
         _conf.artnetOut.manualTargetIp = false;
     _conf.artnetOut.manualTargetIp = (uint8_t)_conf.artnetOut.manualTargetIp ? true : false;
     if ((_conf.artnetOut.targetIp == 0xffffffff) || (_conf.artnetOut.targetIp == 0))
-        _conf.artnetOut.targetIp = 0x01000002;
+        _conf.artnetOut.targetIp = 0x02000001;
     if (_conf.artnetOut.universe == 0xffff)
         _conf.artnetOut.universe = 0;
 }

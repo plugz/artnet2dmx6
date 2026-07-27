@@ -130,7 +130,6 @@ static void artnetout_reset();
 static void config_setup() {
     config.setup(
             [&](uint32_t ip, uint8_t subnet){(void)ip; (void)subnet; artnetin_reset();},
-            {},
             [&](uint16_t universe, bool unicast, uint32_t ip){(void)universe; (void)unicast; (void)ip; artnetout_reset();}
             );
 }

@@ -29,15 +29,13 @@ public:
 
     // void(uint32_t ip, uint8_t subnet)
     using NetworkCallback = std::function<void(uint32_t, uint8_t)>;
-    // void(uint8_t idx, uint16_t universe)
-    using DmxOutCallback = std::function<void(uint8_t, uint16_t)>;
-    // void(uint8_t idx, uint16_t universe)
+    // void(uint16_t universe, bool manualIp, uint32_t targetIp)
     using ArtnetOutCallback = std::function<void(uint16_t, bool, uint32_t)>;
 
 public:
     Config(M95640R* eeprom);
 
-    void setup(NetworkCallback const& networkCallback, DmxOutCallback const& dmxOutCallback, ArtnetOutCallback const& artnetOutCallback);
+    void setup(NetworkCallback const& networkCallback, ArtnetOutCallback const& artnetOutCallback);
 
     void setNetwork(uint32_t ip, uint8_t subnet);
     uint32_t ip() const { return _conf.ip; }
@@ -62,6 +60,10 @@ public:
     }
     uint16_t artnetOutUniverse() const { return _conf.artnetOut.universe; }
 
+    void applyConfSplitter();
+    void applyConfArtnetToDmx();
+    void applyConfResetAll();
+
 private:
     void _loadConfig();
     void _writeConfig();
@@ -70,7 +72,6 @@ private:
     M95640R* _eeprom;
     volatile Conf _conf;
     NetworkCallback _networkCallback;
-    DmxOutCallback _dmxOutCallback;
     ArtnetOutCallback _artnetOutCallback;
 };
 
