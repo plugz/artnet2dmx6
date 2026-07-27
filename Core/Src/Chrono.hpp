@@ -48,10 +48,9 @@ public:
     };
 
     void advance(TClock::duration const& period) {
-        _startTime += period;
-//        auto now = TClock::now();
-//        if (_startTime + period < now)
-//            _startTime = now;
+        auto const elapsed = elapsedTime();
+        auto const advanceTime = elapsed - (elapsed % period);
+        _startTime += advanceTime;
     }
 
     void advance() {

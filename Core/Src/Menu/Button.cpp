@@ -39,9 +39,7 @@ void Button::_sendRepeat(Chrono::Milliseconds period) {
     if (!_longPressRepeatTimer.done(period))
         return;
 
-    _longPressTimer.advance(period);
-    if (_longPressTimer.done()) // avoid firing at each loop
-        _longPressTimer.reset();
+    _longPressRepeatTimer.advance(period);
 
     (Menu::current()->*_cb)(Event::REPEAT);
 }
