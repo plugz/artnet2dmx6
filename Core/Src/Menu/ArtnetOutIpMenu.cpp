@@ -16,7 +16,7 @@ ArtnetOutIpMenu::ArtnetOutIpMenu(CommonStuff const& common)
 
 ArtnetOutIpMenu::~ArtnetOutIpMenu() {}
 
-char const* ArtnetOutIpMenu::name() { return "Target IP"; }
+char const* ArtnetOutIpMenu::name() { return "Set Target IP"; }
 
 void ArtnetOutIpMenu::up(Button::Event e) {
     if (e != Button::Event::PRESS && e != Button::Event::REPEAT)

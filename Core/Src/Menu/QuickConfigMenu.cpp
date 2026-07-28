@@ -27,7 +27,7 @@ QuickConfigMenu::~QuickConfigMenu() {
 }
 
 char const* QuickConfigMenu::name() {
-    return "Quick Config";
+    return "Quick Configs";
 }
 
 void QuickConfigMenu::init(Menu* parent) {

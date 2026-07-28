@@ -45,7 +45,7 @@ void ArtnetOutMenu::init(Menu* parent) {
     std::get<2>(_subMenusTuple).setConfig({
             .min = false,
             .max = true,
-            .name = "Manual Target IP",
+            .name = "Manual IP",
             .inName = "Manual Target IP",
             .desc = "for Artnet Out",
             .getValueCallback = [this]() -> bool { return _common.config->artnetOutManualTargetIp(); },

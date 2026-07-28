@@ -24,7 +24,7 @@ protected:
 
 private:
     uint8_t _idx;
-    char _name[20];
+    char _name[19];
 };
 
 } // namespace Menu

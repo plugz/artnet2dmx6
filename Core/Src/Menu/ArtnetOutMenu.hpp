@@ -1,15 +1,16 @@
 #ifndef __MENU_ARTNETOUTMENU_HPP__
 #define __MENU_ARTNETOUTMENU_HPP__
 
+#include "ArtnetOutIpMenu.hpp"
 #include "ContainerMenu.hpp"
 #include "GenericMenu.hpp"
-#include "ArtnetOutIpMenu.hpp"
+#include "QuickBoolMenu.hpp"
 
 namespace Menu {
 
-using ArtnetOutEnableMenu = GenericMenu<bool>;
+using ArtnetOutEnableMenu = QuickBoolMenu;
 using ArtnetOutUniverseMenu = GenericMenu<uint16_t>;
-using ArtnetOutManualTargetIpMenu = GenericMenu<bool>;
+using ArtnetOutManualTargetIpMenu = QuickBoolMenu;
 
 using ArtnetOutMenuContainer = ContainerMenu<ArtnetOutEnableMenu, ArtnetOutUniverseMenu, ArtnetOutManualTargetIpMenu, ArtnetOutIpMenu>;
 
