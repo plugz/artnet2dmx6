@@ -239,12 +239,12 @@ void LiquidCrystalI2C::_print() {
 void LiquidCrystalI2C::_write() {
     _writeIdx = _currentRow * COLS + _currentCol;
 
-    while ((_writeIdx + 1 != sizeof(_display)) && (_currentHardDisplay[_writeIdx] == _display[_writeIdx])) {
+    while ((_writeIdx != sizeof(_display)) && (_currentHardDisplay[_writeIdx] == _display[_writeIdx])) {
         _advanceCursor(false);
-        _writeIdx = _currentRow * COLS + _currentCol;
+        ++_writeIdx;
     }
 
-    if (_writeIdx + 1 == sizeof(_display)) {
+    if (_writeIdx == sizeof(_display)) {
         _cmdQueue &= ~CMD_MASK(CMD_WRITE);
         return;
     }
@@ -260,7 +260,8 @@ void LiquidCrystalI2C::_write() {
     _sendCmdEnd = [this](){
         _currentHardDisplay[_writeIdx] = _writeByte;
         _advanceCursor(!(_cmdQueue & CMD_MASK(CMD_MOVECURSOR)));
-        if (_writeIdx + 1 == sizeof(_display)) {
+        ++_writeIdx;
+        if (_writeIdx == sizeof(_display)) {
             _cmdQueue &= ~CMD_MASK(CMD_WRITE);
         }
     };
