@@ -46,7 +46,7 @@ void ArtnetOutMenu::init(Menu* parent) {
             .min = false,
             .max = true,
             .name = "Manual Target IP",
-            .inName = "Manual IP",
+            .inName = "Manual Target IP",
             .desc = "for Artnet Out",
             .getValueCallback = [this]() -> bool { return _common.config->artnetOutManualTargetIp(); },
             .setValueCallback = [this](bool val) -> void { _common.config->setArtnetOutManualTargetIp(val); }

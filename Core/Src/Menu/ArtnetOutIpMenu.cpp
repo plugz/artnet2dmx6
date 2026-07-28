@@ -82,20 +82,20 @@ void ArtnetOutIpMenu::_disable() {
 
 void ArtnetOutIpMenu::_display() {
     _common.screen->printLine(0, "Target IP");
-    _common.screen->printLine(2, "for Artnet Out");
+    _common.screen->printLine(1, "");
+    _common.screen->printLine(3, "for Artnet Out");
     _displayIp();
     _moveCursor();
 }
 
 void ArtnetOutIpMenu::_displayIp() {
     char buf[LINE_BUFF_SIZE];
-    snprintf(buf, sizeof(buf), "  %3u.%3u.%3u.%3u", _ipParts[0], _ipParts[1], _ipParts[2],
-             _ipParts[3]);
-    _common.screen->printLine(1, buf);
+    snprintf(buf, sizeof(buf), "  %3u.%3u.%3u.%3u", _ipParts[0], _ipParts[1], _ipParts[2], _ipParts[3]);
+    _common.screen->printLine(2, buf);
 }
 
 void ArtnetOutIpMenu::_moveCursor() {
-    _common.screen->setCursor(_editIdx * 4 + 4, 1, false);
+    _common.screen->setCursor(_editIdx * 4 + 4, 2, false);
 }
 
 } // namespace Menu

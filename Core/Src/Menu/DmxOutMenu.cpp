@@ -15,13 +15,19 @@ DmxOutMenu::~DmxOutMenu() {
 
 void DmxOutMenu::initDmxOutMenu(uint8_t idx) {
     _idx = idx;
-    snprintf(_name, sizeof(_name), "DMX Out #%i", _idx + 1);
 
     std::get<DmxOutInputMenu>(_subMenusTuple).initDmxOutInputMenu(_idx);
     std::get<DmxOutUniverseMenu>(_subMenusTuple).initDmxOutUniverseMenu(_idx);
 }
 
 char const* DmxOutMenu::name() {
+    if (_common.config->dmxOutInputDmx(_idx)) {
+        snprintf(_name, sizeof(_name), "#%u < DMX In", (unsigned int)(_idx + 1));
+    }
+    else {
+        snprintf(_name, sizeof(_name), "#%u < Artnet %u", (unsigned int)(_idx + 1), _common.config->dmxOutInputUniverse(_idx));
+    }
+
     return _name;
 }
 

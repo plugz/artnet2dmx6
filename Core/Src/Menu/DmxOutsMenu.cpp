@@ -20,7 +20,7 @@ void DmxOutsMenu::init(Menu* parent) {
 }
 
 char const* DmxOutsMenu::name() {
-    return "DmxOuts";
+    return "Dmx Outputs";
 }
 
 };

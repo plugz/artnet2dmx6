@@ -25,8 +25,8 @@ void IpMenu::up(Button::Event e) {
         ++_ipParts[_editIdx];
         _displayIp();
     } else {
-        if (_subnet < 24)
-            _subnet += 8;
+        if (_subnet < 31)
+            _subnet += 1;
         _displaySubnet();
     }
     _moveCursor();
@@ -39,8 +39,8 @@ void IpMenu::down(Button::Event e) {
         --_ipParts[_editIdx];
         _displayIp();
     } else {
-        if (_subnet > 8)
-            _subnet -= 8;
+        if (_subnet > 1)
+            _subnet -= 1;
         _displaySubnet();
     }
     _moveCursor();
@@ -96,7 +96,6 @@ void IpMenu::_disable() {
 }
 
 void IpMenu::_display() {
-    _common.screen->printLine(0, "IP");
     _common.screen->printLine(2, "Netmask");
     _displayIp();
     _displaySubnet();
@@ -105,9 +104,8 @@ void IpMenu::_display() {
 
 void IpMenu::_displayIp() {
     char buf[LINE_BUFF_SIZE];
-    snprintf(buf, sizeof(buf), "  %3u.%3u.%3u.%3u", _ipParts[0], _ipParts[1], _ipParts[2],
-             _ipParts[3]);
-    _common.screen->printLine(1, buf);
+    snprintf(buf, sizeof(buf), "IP: %3u.%3u.%3u.%3u", _ipParts[0], _ipParts[1], _ipParts[2], _ipParts[3]);
+    _common.screen->printLine(0, buf);
 }
 
 void IpMenu::_displaySubnet() {
@@ -118,17 +116,20 @@ void IpMenu::_displaySubnet() {
         uint8_t(subnetMask >> 8),
         uint8_t(subnetMask >> 0),
     };
+
     char buf[LINE_BUFF_SIZE];
-    snprintf(buf, sizeof(buf), "  %3u.%3u.%3u.%3u", subnetMaskExploded[0], subnetMaskExploded[1],
-             subnetMaskExploded[2], subnetMaskExploded[3]);
+    snprintf(buf, sizeof(buf), "Subnet: /%2u", _subnet);
+    _common.screen->printLine(1, buf);
+
+    snprintf(buf, sizeof(buf), "  %3u.%3u.%3u.%3u", subnetMaskExploded[0], subnetMaskExploded[1], subnetMaskExploded[2], subnetMaskExploded[3]);
     _common.screen->printLine(3, buf);
 }
 
 void IpMenu::_moveCursor() {
     if (_editIdx < 4)
-        _common.screen->setCursor(_editIdx * 4 + 4, 1, false);
+        _common.screen->setCursor(_editIdx * 4 + 6, 0, false);
     else
-        _common.screen->setCursor(16, 3, false);
+        _common.screen->setCursor(10, 1, false);
 }
 
 } // namespace Menu
