@@ -56,7 +56,7 @@ void ContainerMenu<TSubmenus...>::_display() {
     }
     {
         auto idx = _currentMenuIdx;
-        snprintf(line, sizeof(line), "> %s", _subMenus[idx]->name());
+        snprintf(line, sizeof(line), "\x7e %s", _subMenus[idx]->name());
         _common.screen->printLine(2, line);
     }
     {
