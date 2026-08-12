@@ -58,23 +58,25 @@ void LiquidCrystalI2C::begin() {
 
     // Now we pull both RS and R/W low to begin commands
     _expanderWrite(_backlightval);    // reset expanderand turn backlight off (Bit 8 =1)
-    Chrono::delay(Chrono::Microseconds{4200}); // wait min 4.1ms ?
+    Chrono::delay(Chrono::Milliseconds{20}); // wait min 4.1ms ?
 
     //put the LCD into 4 bit mode
     // this is according to the hitachi HD44780 datasheet
     // figure 24, pg 46
 
     // we start in 8bit mode, try to set 4 bit mode
-    _write4bits(0x03 << 4);
-    Chrono::delay(Chrono::Microseconds{4200}); // wait min 4.1ms ?
+    for (int i = 0; i < 7; ++i) {
+        _write4bits(0x03 << 4);
+        Chrono::delay(Chrono::Microseconds{4200}); // wait min 4.1ms ?
+    }
 
-    // second try
+//    // second try
     _write4bits(0x03 << 4);
-    Chrono::delay(Chrono::Microseconds{4200}); // wait min 4.1ms ?
-
-    // third go!
+    Chrono::delay(Chrono::Microseconds{110}); // wait min 4.1ms ?
+//
+//    // third go!
     _write4bits(0x03 << 4);
-    Chrono::delay(Chrono::Microseconds{160});
+////    Chrono::delay(Chrono::Microseconds{160});
 
     // finally, set to 4-bit interface
     _write4bits(0x02 << 4);
