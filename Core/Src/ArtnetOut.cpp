@@ -1,5 +1,7 @@
 #include "ArtnetOut.hpp"
 
+#include "Artnet.hpp"
+
 #include "udp.h"
 
 ArtnetOut::ArtnetOut() {}
@@ -18,6 +20,10 @@ void ArtnetOut::setUniverse(uint16_t universe) {
     _universe = universe;
 }
 
+void ArtnetOut::setTargetIp(uint32_t targetIp) {
+    _targetIp = targetIp;
+}
+
 void ArtnetOut::tick() {
     if (!(_buffers[_nextBufferIdx]))
         return;
@@ -34,8 +40,10 @@ void ArtnetOut::tick() {
     // reduce pbuf size
     pbuf_realloc(p, packet.dataSize());
 
+    ip4_addr_t targetAddress;
+    IP4_ADDR(&targetAddress, uint8_t(_targetIp >> 24), uint8_t(_targetIp >> 16), uint8_t(_targetIp >> 8), uint8_t(_targetIp));
     // This always returns ERR_OK for some reason
-    bool success = (udp_send(_udp, p) == ERR_OK);
+    bool success = (udp_sendto(_udp, p, &targetAddress, ARTNET_DEFAULT_PORT) == ERR_OK);
 
     if (_cb)
         _cb(packet, success);

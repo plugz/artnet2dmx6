@@ -375,15 +375,8 @@ static void artnetout_setup() {
 }
 
 static void artnetout_reset()  {
-    // set remote target so future calls to udp_send will target this address
-    {
-        ip4_addr_t targetAddress;
-        uint32_t const cfgTargetIp = config.artnetOutTargetIp();
-        IP4_ADDR(&targetAddress, uint8_t(cfgTargetIp >> 24), uint8_t(cfgTargetIp >> 16), uint8_t(cfgTargetIp >> 8), uint8_t(cfgTargetIp));
-        udp_connect(udp, &targetAddress, ARTNET_DEFAULT_PORT);
-    }
-
     artnetOut.setNetwork(udp);
+    artnetOut.setTargetIp(config.artnetOutTargetIp());
     artnetOut.setUniverse(config.artnetOutUniverse());
 }
 

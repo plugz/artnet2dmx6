@@ -16,6 +16,7 @@ public:
     void init(PacketSentCallback cb);
     void setNetwork(udp_pcb* udp);
     void setUniverse(uint16_t universe);
+    void setTargetIp(uint32_t targetIp);
     void tick();
 
     void sendDmx(Packet const& dmxPacket);
@@ -24,6 +25,7 @@ private:
     PacketSentCallback _cb = nullptr;
     udp_pcb* _udp = nullptr;
     uint16_t _universe = 0;
+    uint32_t _targetIp;
 
     Packet _buffers[2];
     unsigned int _currentBufferIdx = 0; // currently sending out

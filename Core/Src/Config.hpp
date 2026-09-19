@@ -55,6 +55,7 @@ public:
     uint32_t artnetOutTargetIp() const {
         if (_conf.artnetOut.manualTargetIp)
             return _conf.artnetOut.targetIp;
+        // return limited broadcast address in case of no manual target ip
         uint32_t subnetMask = ~(uint64_t(1 << (32 - _conf.subnet)) - 1);
         return _conf.ip | ~subnetMask;
     }
