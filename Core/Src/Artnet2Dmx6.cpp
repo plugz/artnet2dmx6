@@ -138,10 +138,10 @@ static void config_tick() {
 }
 
 // screen
-static void screen_setup() {
+static bool screen_setup() {
     // i2c: 8bit address, not 7bit
     screen.init(&hi2c1, 0b01000000);
-    screen.begin();
+    return screen.begin();
 }
 
 static void screen_tick() {
@@ -417,14 +417,18 @@ void artnet2dmx6_init_sysinit() {
 void artnet2dmx6_init_beforeloop() {
     Chrono::init();
 
-    // enable secondary 5V
-    HAL_GPIO_WritePin(PWR_5V_EN_GPIO_GPIO_Port, PWR_5V_EN_GPIO_Pin, GPIO_PIN_SET);
-    Chrono::delay(Chrono::Milliseconds{500});
+    do {
+        // disable secondary 5V
+        HAL_GPIO_WritePin(PWR_5V_EN_GPIO_GPIO_Port, PWR_5V_EN_GPIO_Pin, GPIO_PIN_RESET);
+        Chrono::delay(Chrono::Milliseconds{110});
+        // enable secondary 5V
+        HAL_GPIO_WritePin(PWR_5V_EN_GPIO_GPIO_Port, PWR_5V_EN_GPIO_Pin, GPIO_PIN_SET);
+        Chrono::delay(Chrono::Milliseconds{110});
+    } while (!screen_setup()); // screen is shit and init might fail
 
     eeprom_setup();
     config_setup();
 
-    screen_setup();
     menu_setup();
 
     mcp_setup();

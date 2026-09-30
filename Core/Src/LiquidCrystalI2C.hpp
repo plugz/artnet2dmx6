@@ -84,7 +84,7 @@ public:
     /**
      * Set the LCD display in the correct begin state, must be called before anything else is done.
      */
-    void begin();
+    bool begin();
 
     void setCursorBlink(bool blink);
     void setCursorDisplay(bool cursor);

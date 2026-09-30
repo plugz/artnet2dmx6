@@ -50,33 +50,36 @@ void LiquidCrystalI2C::init(I2C_HandleTypeDef* i2cHandle, uint8_t lcd_addr)
 //    _writeIdx = COLS * ROWS;
 }
 
-void LiquidCrystalI2C::begin() {
+bool LiquidCrystalI2C::begin() {
     // SEE PAGE 45/46 FOR INITIALIZATION SPECIFICATION!
     // according to datasheet, we need at least 40ms after power rises above 2.7V
     // before sending commands.
-    Chrono::delay(Chrono::Milliseconds{50});
+    // wait is already done when enabling +5v
+    //Chrono::delay(Chrono::Milliseconds{250});
+
+    // sometimes the PCF8574T does not initialize correctly, in this case, abandon
+    if (HAL_I2C_IsDeviceReady(_i2cHandle, _addr, 50, 1) != HAL_OK)
+        return false;
 
     // Now we pull both RS and R/W low to begin commands
-    _expanderWrite(_backlightval);    // reset expanderand turn backlight off (Bit 8 =1)
-    Chrono::delay(Chrono::Milliseconds{500}); // wait min 4.1ms ?
+    _expanderWrite(0);    // reset expanderand turn backlight off (Bit 8 =1)
+    Chrono::delay(Chrono::Milliseconds{10});
 
     //put the LCD into 4 bit mode
     // this is according to the hitachi HD44780 datasheet
     // figure 24, pg 46
 
     // we start in 8bit mode, try to set 4 bit mode
-    for (int i = 0; i < 1; ++i) {
-        _write4bits(0x03 << 4);
-        Chrono::delay(Chrono::Microseconds{4200}); // wait min 4.1ms ?
-    }
+    _write4bits(0x03 << 4);
+    Chrono::delay(Chrono::Microseconds{4200});
 
-//    // second try
+    // second try
     _write4bits(0x03 << 4);
-    Chrono::delay(Chrono::Microseconds{110}); // wait min 4.1ms ?
-//
-//    // third go!
+    Chrono::delay(Chrono::Microseconds{110});
+
+    // third go!
     _write4bits(0x03 << 4);
-////    Chrono::delay(Chrono::Microseconds{160});
+    Chrono::delay(Chrono::Microseconds{160});
 
     // finally, set to 4-bit interface
     _write4bits(0x02 << 4);
@@ -97,6 +100,8 @@ void LiquidCrystalI2C::begin() {
 
     _command(LCD_RETURNHOME);  // set cursor position to zero
     Chrono::delay(Chrono::Microseconds{2100});  // this command takes a long time!
+
+    return true;
 }
 
 void LiquidCrystalI2C::setCursor(uint8_t col, uint8_t row, bool now){
