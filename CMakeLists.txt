@@ -39,6 +39,8 @@ enable_language(C CXX ASM)
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME})
 
+set(CACHE{A2D6_DEVICE_ID} TYPE STRING VALUE 1)
+
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
 
@@ -60,6 +62,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add project symbols (macros)
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined symbols
+    A2D6_DEVICE_ID=${A2D6_DEVICE_ID}
 )
 
 # Remove wrong libob.a library dependency when using cpp files

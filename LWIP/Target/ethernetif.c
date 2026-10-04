@@ -33,7 +33,6 @@
 
 /* Within 'USER CODE' section, code will be kept by default at each generation */
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 /* Private define ------------------------------------------------------------*/
@@ -151,7 +150,7 @@ static void low_level_init(struct netif *netif)
   MACAddr[2] = 0xE1;
   MACAddr[3] = 0x00;
   MACAddr[4] = 0x00;
-  MACAddr[5] = 0x00;
+  MACAddr[5] = A2D6_DEVICE_ID;
   heth.Init.MACAddr = &MACAddr[0];
   heth.Init.MediaInterface = HAL_ETH_MII_MODE;
   heth.Init.TxDesc = DMATxDscrTab;
@@ -159,7 +158,6 @@ static void low_level_init(struct netif *netif)
   heth.Init.RxBuffLen = 1536;
 
   /* USER CODE BEGIN MACADDRESS */
-
   /* USER CODE END MACADDRESS */
 
   hal_eth_init_status = HAL_ETH_Init(&heth);
