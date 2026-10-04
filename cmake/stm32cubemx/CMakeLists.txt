@@ -77,6 +77,7 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Stats.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/StatusLeds.cpp
 
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/AboutMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/ArtnetOutMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/ArtnetOutIpMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/Menu/Button.cpp

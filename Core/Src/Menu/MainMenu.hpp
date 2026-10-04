@@ -1,6 +1,7 @@
 #ifndef __MENU_MAINMENU_HPP__
 #define __MENU_MAINMENU_HPP__
 
+#include "AboutMenu.hpp"
 #include "ArtnetOutMenu.hpp"
 #include "ContainerMenu.hpp"
 #include "DmxOutsMenu.hpp"
@@ -11,7 +12,7 @@
 
 namespace Menu {
 
-using MainMenuContainer = ContainerMenu<IpMenu, DmxOutsMenu, ArtnetOutMenu, QuickConfigMenu, ScreenOffMenu>;
+using MainMenuContainer = ContainerMenu<IpMenu, DmxOutsMenu, ArtnetOutMenu, QuickConfigMenu, AboutMenu, ScreenOffMenu>;
 
 class MainMenu : public MainMenuContainer
 {

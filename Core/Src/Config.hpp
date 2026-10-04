@@ -8,7 +8,7 @@ class M95640R;
 
 class Config {
 public:
-    static constexpr const char VERSION[] = "1.00";
+    static constexpr const char SOFTWARE_VERSION[] = "1.00";
     static constexpr uint8_t DEVICE_ID = A2D6_DEVICE_ID;
 
 public:
