@@ -22,10 +22,11 @@ void DmxOutMenu::initDmxOutMenu(uint8_t idx) {
 
 char const* DmxOutMenu::name() {
     if (_common.config->dmxOutInputDmx(_idx)) {
-        snprintf(_name, sizeof(_name), "#%u < DMX In", (unsigned int)(_idx + 1));
+        snprintf(_name, sizeof(_name), "#%" PRIu16 " < DMX In", (uint16_t)_idx + 1);
+
     }
     else {
-        snprintf(_name, sizeof(_name), "#%u < Artnet %u", (unsigned int)(_idx + 1), _common.config->dmxOutInputUniverse(_idx));
+        snprintf(_name, sizeof(_name), "#%" PRIu16 " < Artnet %" PRIu16 "", (uint16_t)_idx + 1, _common.config->dmxOutInputUniverse(_idx));
     }
 
     return _name;

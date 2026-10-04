@@ -104,7 +104,8 @@ void IpMenu::_display() {
 
 void IpMenu::_displayIp() {
     char buf[LINE_BUFF_SIZE];
-    snprintf(buf, sizeof(buf), "IP: %3u.%3u.%3u.%3u", _ipParts[0], _ipParts[1], _ipParts[2], _ipParts[3]);
+    snprintf(buf, sizeof(buf), "IP: %3" PRIu16 ".%3" PRIu16 ".%3" PRIu16 ".%3" PRIu16,
+            (uint16_t)_ipParts[0], (uint16_t)_ipParts[1], (uint16_t)_ipParts[2], (uint16_t)_ipParts[3]);
     _common.screen->printLine(0, buf);
 }
 
@@ -121,7 +122,8 @@ void IpMenu::_displaySubnet() {
     snprintf(buf, sizeof(buf), "Subnet: /%2u", _subnet);
     _common.screen->printLine(1, buf);
 
-    snprintf(buf, sizeof(buf), "  %3u.%3u.%3u.%3u", subnetMaskExploded[0], subnetMaskExploded[1], subnetMaskExploded[2], subnetMaskExploded[3]);
+    snprintf(buf, sizeof(buf), "  %3" PRIu16 ".%3" PRIu16 ".%3" PRIu16 ".%3" PRIu16,
+            (uint16_t)subnetMaskExploded[0], (uint16_t)subnetMaskExploded[1], (uint16_t)subnetMaskExploded[2], (uint16_t)subnetMaskExploded[3]);
     _common.screen->printLine(3, buf);
 }
 

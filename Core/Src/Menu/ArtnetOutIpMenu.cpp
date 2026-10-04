@@ -90,7 +90,8 @@ void ArtnetOutIpMenu::_display() {
 
 void ArtnetOutIpMenu::_displayIp() {
     char buf[LINE_BUFF_SIZE];
-    snprintf(buf, sizeof(buf), "  %3u.%3u.%3u.%3u", _ipParts[0], _ipParts[1], _ipParts[2], _ipParts[3]);
+    snprintf(buf, sizeof(buf), "  %3" PRIu16 ".%3" PRIu16 ".%3" PRIu16 ".%3" PRIu16,
+            (uint16_t)_ipParts[0], (uint16_t)_ipParts[1], (uint16_t)_ipParts[2], (uint16_t)_ipParts[3]);
     _common.screen->printLine(2, buf);
 }
 

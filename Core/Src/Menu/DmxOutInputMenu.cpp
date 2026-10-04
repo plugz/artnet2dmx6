@@ -28,7 +28,7 @@ void DmxOutInputMenu::initDmxOutInputMenu(uint8_t idx) {
 
     std::snprintf(_config.name, sizeof(_config.name), "Input type");
     std::snprintf(_config.inName, sizeof(_config.desc), "Input type");
-    std::snprintf(_config.desc, sizeof(_config.inName), "for DMX Out %i", (uint8_t)(_idx + 1));
+    std::snprintf(_config.desc, sizeof(_config.inName), "for DMX Out %" PRIu16, (uint16_t)(_idx + 1));
 
     _config.getValueCallback = [this]() -> bool { return _common.config->dmxOutInputDmx(_idx); };
     _config.setValueCallback = [this](bool val) -> void { _common.config->setDmxOutInputDmx(_idx, val); };
