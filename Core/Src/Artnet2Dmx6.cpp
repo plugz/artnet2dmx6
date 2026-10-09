@@ -418,12 +418,20 @@ void artnet2dmx6_init_beforeloop() {
     Chrono::init();
 
     do {
+        // disable i2c
+        HAL_I2C_DeInit(&hi2c1);
+
         // disable secondary 5V
         HAL_GPIO_WritePin(PWR_5V_EN_GPIO_GPIO_Port, PWR_5V_EN_GPIO_Pin, GPIO_PIN_RESET);
         Chrono::delay(Chrono::Milliseconds{110});
+
         // enable secondary 5V
         HAL_GPIO_WritePin(PWR_5V_EN_GPIO_GPIO_Port, PWR_5V_EN_GPIO_Pin, GPIO_PIN_SET);
         Chrono::delay(Chrono::Milliseconds{110});
+
+        // enable i2c
+        MX_I2C1_Init();
+
     } while (!screen_setup()); // screen is shit and init might fail
 
     eeprom_setup();
